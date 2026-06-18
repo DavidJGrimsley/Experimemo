@@ -89,3 +89,93 @@
     }
   }
 }
+
+/* MDS_STYLIST_NATIVEWINDUI_THEME_START */
+@layer base {
+  :root {
+    --background: 248 250 252;
+    --foreground: 17 24 39;
+    --card: 226 232 240;
+    --card-foreground: 17 24 39;
+    --popover: 226 232 240;
+    --popover-foreground: 17 24 39;
+    --primary: 41 154 15;
+    --primary-foreground: 255 255 255;
+    --secondary: 124 58 237;
+    --secondary-foreground: 255 255 255;
+    --muted: 226 232 240;
+    --muted-foreground: 17 24 39;
+    --accent: 124 58 237;
+    --accent-foreground: 255 255 255;
+    --destructive: 249 115 22;
+    --destructive-foreground: 255 255 255;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 41 154 15;
+
+    --android-background: 248 250 252;
+    --android-foreground: 17 24 39;
+    --android-card: 226 232 240;
+    --android-card-foreground: 17 24 39;
+    --android-popover: 226 232 240;
+    --android-popover-foreground: 17 24 39;
+    --android-primary: 41 154 15;
+    --android-primary-foreground: 255 255 255;
+    --android-secondary: 124 58 237;
+    --android-secondary-foreground: 255 255 255;
+    --android-muted: 226 232 240;
+    --android-muted-foreground: 17 24 39;
+    --android-accent: 124 58 237;
+    --android-accent-foreground: 255 255 255;
+    --android-destructive: 249 115 22;
+    --android-destructive-foreground: 255 255 255;
+    --android-border: 226 232 240;
+    --android-input: 226 232 240;
+    --android-ring: 41 154 15;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 9 9 11;
+      --foreground: 248 250 252;
+      --card: 24 24 27;
+      --card-foreground: 248 250 252;
+      --popover: 24 24 27;
+      --popover-foreground: 248 250 252;
+      --primary: 41 154 15;
+      --primary-foreground: 255 255 255;
+      --secondary: 167 139 250;
+      --secondary-foreground: 255 255 255;
+      --muted: 24 24 27;
+      --muted-foreground: 248 250 252;
+      --accent: 167 139 250;
+      --accent-foreground: 255 255 255;
+      --destructive: 251 146 60;
+      --destructive-foreground: 255 255 255;
+      --border: 24 24 27;
+      --input: 24 24 27;
+      --ring: 41 154 15;
+
+      --android-background: 9 9 11;
+      --android-foreground: 248 250 252;
+      --android-card: 24 24 27;
+      --android-card-foreground: 248 250 252;
+      --android-popover: 24 24 27;
+      --android-popover-foreground: 248 250 252;
+      --android-primary: 41 154 15;
+      --android-primary-foreground: 255 255 255;
+      --android-secondary: 167 139 250;
+      --android-secondary-foreground: 255 255 255;
+      --android-muted: 24 24 27;
+      --android-muted-foreground: 248 250 252;
+      --android-accent: 167 139 250;
+      --android-accent-foreground: 255 255 255;
+      --android-destructive: 251 146 60;
+      --android-destructive-foreground: 255 255 255;
+      --android-border: 24 24 27;
+      --android-input: 24 24 27;
+      --android-ring: 41 154 15;
+    }
+  }
+}
+/* MDS_STYLIST_NATIVEWINDUI_THEME_END */

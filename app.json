@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "experimental3",
+    "name": "Experimental",
     "slug": "experimental3",
     "version": "1.0.0",
     "scheme": "experimental3",
-    "platforms": ["ios", "android", "web"],
+    "platforms": ["ios", "android"],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -19,7 +19,23 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "@react-native-community/datetimepicker"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos so you can attach experiment images.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera so you can capture experiment photos later.",
+          "microphonePermission": false
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-navigation-bar",
+        {
+          "style": "dark",
+          "enforceContrast": false
+        }
+      ],
+      "expo-system-ui"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -31,13 +47,24 @@
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "mrdj2u.experimental",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "mrdj2u.experimental",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "backgroundColor": "#f1f0f8"
+    },
+    "backgroundColor": "#f1f0f8",
+    "androidStatusBar": {
+      "backgroundColor": "#f1f0f8",
+      "barStyle": "dark-content",
+      "translucent": false
     }
   }
 }

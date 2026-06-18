@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "phases": {
+    "phase-0": {
+      "derivedTaskKeys": [
+        "review project files for accuracy and planning adjustments",
+        "browse exposition pages to understand the included starter flows package demos and mds scaffolding",
+        "run mds eject exposition and keep only the generated sections you want to retain",
+        "keep or prune included package examples after reviewing exposition",
+        "remove exposition pages before production once their lessons are absorbed",
+        "review styling in the stylist page and pressure test the starter theme before building product screens",
+        "run or defer eject stylist mark this todo done after ejection or deciding to keep it longer for design iteration",
+        "confirm visual direction in project style md after reviewing the stylist page",
+        "sign in and set up eas in the terminal",
+        "if project info md changes materially rerun mds roadmap and review this plan before continuing implementation"
+      ]
+    },
+    "phase-1": {
+      "derivedTaskKeys": [
+        "establish the app shell and first implementation ready route in src app",
+        "implement the first core user flow create an experiment",
+        "build the first screens or routes needed for the mvp flow new create new experiment track list of past experiments and settings",
+        "scope the first feature modules around track multiple experiments each with its own hypothesis procedure data collection and results view and edit existing experiments and add pictures and notes to experiments"
+      ]
+    },
+    "phase-2": {
+      "derivedTaskKeys": [
+        "implement the initial data layer using local dummy data with expo sqlite",
+        "design the initial data layer and service boundaries for local ui app state image uploads and local dummy data with expo sqlite",
+        "plan file and media upload flows storage ownership and failure handling"
+      ]
+    },
+    "phase-3": {
+      "derivedTaskKeys": [
+        "adapt the working mvp flow for the remaining target platforms after the primary flow is stable android",
+        "configure eas for building mobile apps"
+      ]
+    },
+    "phase-4": {
+      "derivedTaskKeys": [
+        "prepare store distribution packaging review notes and release validation for the chosen delivery path",
+        "confirm branch protection ci checks and release gating match the planned ship workflow",
+        "run mds doctor ci and address errors",
+        "follow project release flow md for test to main development",
+        "complete the one time github repo setup from project release flow md so test and main are protected correctly",
+        "add github branch protection so pr checks pass before merging into test or main",
+        "prepare the release flow for app store and test to main safeguards",
+        "close or explicitly defer the remaining open questions before production release"
+      ]
+    }
+  }
+}
