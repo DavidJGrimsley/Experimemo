@@ -1,4 +1,4 @@
-# experimental3 TODO
+# experimemo TODO
 
 ## Phase 0: Orientation And Planning
 
@@ -36,8 +36,19 @@
 - [x] Prepare store/distribution packaging, review notes, and release validation for the chosen delivery path
 - [x] Confirm branch protection, CI checks, and release gating match the planned ship workflow
 - [x] Run `mds doctor --ci` and address errors
-- [ ] Follow `project/release-flow.md` for test-to-main development
-- [ ] Complete the one-time GitHub repo setup from `project/release-flow.md` so `test` and `main` are protected correctly
-- [ ] Add GitHub branch protection so PR checks pass before merging into `test` or `main`
+- [x] Follow `project/release-flow.md` for test-to-main development
+- [x] Complete the one-time GitHub repo setup from `project/release-flow.md` so `test` and `main` are protected correctly
+- [x] Add GitHub branch protection so PR checks pass before merging into `test` or `main`
 - [x] Prepare the release flow for: App Store and test-to-main safeguards
-- [ ] Close or explicitly defer the remaining open questions before production release
+- [x] Close or explicitly defer the remaining open questions before production release
+
+## Extra Changes to MVP
+- [ ] Replace everything possible with universal components from Expo UI and use nativetabs from Expo UI as well for the tab navigator.
+- [ ] Remove developer facing notes and todos from the app screens - make all copy user-facing.
+- [ ] Remove 'what the results field means' view from create page
+- [ ] in the experiment [id] page, Add a toggle to mark experiments as complete and move them to a completed section in the track page
+- [ ] The experiment [id] page has header issues, too large and doesn't say the name of the experiment but the name may be too long so let's just leave that blank and have the experiment name as the title to replace 'edit experiment'.
+- [ ] Remove the settings tab
+- [ ] Put an info circle icon in the header which should open up a larg modal with settings, about, and feedback sections. Settings will contain 'Delete Experiments' and 'Reset App' buttons. which will allow the user to delete experiments from a list or reset the entire app data. The about section will have info about the dev (me) and the feedback section will have a link to a the github repo and instructions for how to submit feedback and issues.
+- [ ] the 'Experiment' needs work. specifically, the results section. Let's just rename that to only 'Observations' but below that we should have a section for Results which will be more dynamic and allow the user to track multiple result entries with a date and time and notes and photos for each result entry. This will allow the user to track the experiment over time and have a more complete picture of how it went.
+- [ ] Add a 'Conclusion' section below Field Notes

@@ -2,7 +2,7 @@
 // It is safe to delete this file as it does not affect the functionality of your application.
 {
   "cesVersion": "2.21.3-mrdj.2",
-  "projectName": "experimental3",
+  "projectName": "experimemo",
   "packages": [
     {
       "name": "nativewindui",
