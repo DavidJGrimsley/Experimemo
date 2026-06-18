@@ -10,6 +10,9 @@ concurrency:
   group: eas-production-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build_production_artifacts:
     name: Build production artifacts on EAS

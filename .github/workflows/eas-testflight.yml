@@ -10,6 +10,9 @@ concurrency:
   group: eas-testflight-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   release_ios_testflight:
     name: Build and submit iOS to TestFlight
