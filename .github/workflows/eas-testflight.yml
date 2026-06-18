@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Setup Expo and EAS
@@ -45,4 +45,4 @@ jobs:
         run: npm run ci:verify --if-present
 
       - name: Build and auto-submit to TestFlight
-        run: npx eas-cli@latest build --platform ios --profile testflight --auto-submit --non-interactive --wait --message "test ${GITHUB_SHA}" --what-to-test "Latest test branch build from GitHub Actions."
+        run: npx eas-cli@latest build --platform ios --profile testflight --auto-submit --non-interactive --wait --message "test ${GITHUB_SHA}"

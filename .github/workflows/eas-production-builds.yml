@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Setup Expo and EAS
@@ -45,4 +45,4 @@ jobs:
         run: npm run ci:verify --if-present
 
       - name: Build iOS and Android production artifacts
-        run: npx eas-cli@latest build --platform all --profile production --non-interactive --wait --message "main ${GITHUB_SHA}"
+        run: eas build --platform all --profile production --non-interactive --wait --message "main ${GITHUB_SHA}"
