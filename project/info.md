@@ -39,7 +39,7 @@ Search and filter experiments
 
 New (create new experiment)
 Track (list of past experiments)
-Settings
+App info modal
 
 ## Platforms
 
@@ -133,7 +133,7 @@ There are a lot of science students wanting to conduct experiments.
 - TypeScript: Yes
 - Package Manager: npm
 - Navigation: Expo Router
-- Type of Navigation: Drawer + Tabs
+- Type of Navigation: Native tabs + modal stack
 - Expo Router app directory: `src/app`
 - Platform-specific organization (folders, files, or inline): platform-specific files only
 - Platform layout mode: shared layouts

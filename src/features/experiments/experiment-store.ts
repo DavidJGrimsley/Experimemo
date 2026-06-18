@@ -7,9 +7,11 @@ export type {
 
 export {
   createExperimentDraft,
+  deleteExperiments,
   ensureLocalDataReady,
   getExperimentById,
   listExperiments,
+  resetExperiments,
   updateExperiment,
   experimentDataBoundaryNotes,
 } from '../../services/local-data';

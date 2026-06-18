@@ -7,8 +7,19 @@ import {
 } from '../features/experiments/experiment-models';
 
 const dbPromise = SQLite.openDatabaseAsync('experiment-tracker.db');
+const bootstrapKey = 'experiments_bootstrapped';
 let sqliteUnavailable = false;
-let memoryExperiments: ExperimentRecord[] = [...seedExperiments];
+let memoryExperiments: ExperimentRecord[] = [];
+let memoryHasBootstrappedExperiments = false;
+
+function ensureMemoryBootstrapped() {
+  if (memoryHasBootstrappedExperiments) {
+    return;
+  }
+
+  memoryExperiments = [...seedExperiments];
+  memoryHasBootstrappedExperiments = true;
+}
 
 async function getDb() {
   if (sqliteUnavailable) {
@@ -25,6 +36,14 @@ async function getDb() {
 
 function sortExperiments(experiments: ExperimentRecord[]) {
   return [...experiments].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+async function setBootstrapSentinel(db: SQLite.SQLiteDatabase) {
+  await db.runAsync(
+    'INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)',
+    bootstrapKey,
+    'true'
+  );
 }
 
 function normalizeRecord(record: {
@@ -63,10 +82,18 @@ export async function ensureLocalDataReady(): Promise<void> {
   const db = await getDb();
 
   if (!db) {
+    ensureMemoryBootstrapped();
     return;
   }
 
   try {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS app_state (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS experiments (
         id TEXT PRIMARY KEY NOT NULL,
@@ -94,11 +121,21 @@ export async function ensureLocalDataReady(): Promise<void> {
       // Older installs may already have this column, so the migration can noop safely.
     }
 
+    const bootstrapRow = await db.getFirstAsync<{ value: string }>(
+      'SELECT value FROM app_state WHERE key = ?',
+      bootstrapKey
+    );
+
+    if (bootstrapRow?.value === 'true') {
+      return;
+    }
+
     const row = await db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM experiments'
     );
 
     if ((row?.count ?? 0) > 0) {
+      await setBootstrapSentinel(db);
       return;
     }
 
@@ -134,8 +171,11 @@ export async function ensureLocalDataReady(): Promise<void> {
         experiment.updatedAt
       );
     }
+
+    await setBootstrapSentinel(db);
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
   }
 }
 
@@ -167,6 +207,7 @@ export async function listExperiments(): Promise<ExperimentRecord[]> {
     return records.map(normalizeRecord);
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
     return sortExperiments(memoryExperiments);
   }
 }
@@ -199,6 +240,7 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
     return record ? normalizeRecord(record) : null;
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
     return memoryExperiments.find((experiment) => experiment.id === id) ?? null;
   }
 }
@@ -226,6 +268,7 @@ export async function createExperimentDraft(
   };
 
   if (!db) {
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = [experiment, ...memoryExperiments];
     return experiment;
   }
@@ -265,8 +308,53 @@ export async function createExperimentDraft(
     return experiment;
   } catch {
     sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = [experiment, ...memoryExperiments];
     return experiment;
+  }
+}
+
+export async function deleteExperiments(ids: string[]): Promise<void> {
+  await ensureLocalDataReady();
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const idsToDelete = new Set(ids);
+  const db = await getDb();
+
+  if (!db) {
+    memoryExperiments = memoryExperiments.filter((experiment) => !idsToDelete.has(experiment.id));
+    return;
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(', ');
+    await db.runAsync(`DELETE FROM experiments WHERE id IN (${placeholders})`, ...ids);
+  } catch {
+    sqliteUnavailable = true;
+    memoryExperiments = memoryExperiments.filter((experiment) => !idsToDelete.has(experiment.id));
+  }
+}
+
+export async function resetExperiments(): Promise<void> {
+  await ensureLocalDataReady();
+  const db = await getDb();
+
+  if (!db) {
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = [];
+    return;
+  }
+
+  try {
+    await db.runAsync('DELETE FROM experiments');
+    await setBootstrapSentinel(db);
+  } catch {
+    sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = [];
   }
 }
 
@@ -299,6 +387,7 @@ export async function updateExperiment(
   const db = await getDb();
 
   if (!db) {
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = memoryExperiments.map((experiment) =>
       experiment.id === id ? updated : experiment
     );
@@ -328,6 +417,7 @@ export async function updateExperiment(
     return updated;
   } catch {
     sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = memoryExperiments.map((experiment) =>
       experiment.id === id ? updated : experiment
     );
@@ -340,5 +430,6 @@ export const experimentDataBoundaryNotes = [
   'If SQLite is unavailable, the service falls back to in-memory dummy records so the app still runs.',
   'Feature screens read and write through this boundary instead of speaking to SQLite directly.',
   'Attached photos are stored as local picker URI metadata on the experiment record.',
+  'Resetting or deleting all records does not re-seed starter experiments after the first bootstrap.',
   'A later media step can replace local URI references with a stronger file-storage strategy if needed.',
 ];
