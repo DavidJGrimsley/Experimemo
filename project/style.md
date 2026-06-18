@@ -1,4 +1,4 @@
-# experimental3 Style
+# experimemo Style
 
 ## Visual Direction
 

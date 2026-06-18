@@ -11,7 +11,7 @@ export interface AppSnapshot {
 }
 
 export const appSnapshot: AppSnapshot = {
-  name: 'experimental3',
+  name: 'experimemo',
   audience: 'Scientists and people learning how to conduct experiments',
   tasks: [
     { id: 'task-1', title: 'Shape the first user flow', status: 'doing' },

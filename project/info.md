@@ -1,7 +1,7 @@
-# experimental3 Project Info
+# experimemo Project Info
 
 ## App Name
-Experimental
+experimemo
 
 ## Overview
 
@@ -52,7 +52,7 @@ Will consider applying for grants to fund development and maintenance, but no mo
 
 ## Team Context
 
-Solo dev
+Solo dev & designer for logos
 
 ## Later Scope & Possibilities
 
@@ -71,7 +71,7 @@ The following notes existed before MDS normalized this file. An agent should mov
 # Experiment-Tracker Project Info
 
 ## App Name
-Experimental
+experimemo
 
 ## Overview
 

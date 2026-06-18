@@ -1,21 +1,20 @@
-# experimental3 App Store Release Prep
+# experimemo App Store Release Prep
 
 ## Chosen Delivery Path
 
 - Primary release target: Apple App Store on iPhone first.
 - Android remains a supported platform, but store packaging can follow after the
   iOS submission path is validated.
-- EAS setup was intentionally skipped for this session, so this document focuses
-  on packaging readiness, review notes, and release validation rather than build
-  automation.
+- EAS project linkage is now complete, and branch-based workflow files are ready
+  for `test` and `main` through GitHub Actions.
 
 ## Current Packaging Snapshot
 
-- App display name in config: `Experimental`
-- Scheme and slug: `experimental3`
+- App display name in config: `experimemo`
+- Scheme and slug: `experimemo`
 - Marketing version: `1.0.0`
-- iOS bundle identifier: `mrdj2u.experimental`
-- Android package name: `mrdj2u.experimental`
+- iOS bundle identifier: `mrdj2u.experimemo`
+- Android package name: `mrdj2u.experimemo`
 - iOS build number: `1`
 - Android version code: `1`
 - Orientation: portrait
@@ -29,9 +28,9 @@
 
 ## Store Metadata Still Needed Before Submission
 
-- Final customer-facing product name: `Experimental`
-- Final iOS bundle identifier: `mrdj2u.experimental`
-- Final Android package name: `mrdj2u.experimental`
+- Final customer-facing product name: `experimemo`
+- Final iOS bundle identifier: `mrdj2u.experimemo`
+- Final Android package name: `mrdj2u.experimemo`
 - Final versioning for the first release:
   - marketing version: `1.0.0`
   - iOS build number: `1`
@@ -62,8 +61,8 @@
   copy remains product-ready.
 - Legal onboarding routes still exist in the app shell. If they are not part of
   the intended public MVP, remove or hide them before submission.
-- The current app config does not yet declare final bundle identifiers or build
-  numbers, so packaging is not submission-ready until those values are chosen.
+- App Store Connect credentials and the first successful TestFlight upload still
+  need to be completed before `test` branch automation can succeed.
 - Local-only photo URI storage is acceptable for MVP review, but it should be
   tested on a fresh install, app relaunch, and permission-denied path before
   release.
@@ -90,5 +89,9 @@
   gate because this app does not ship a web target.
 - The shipping app name and mobile bundle/package identifiers are now set in
   `app.json`.
-- If EAS is added later, keep this document as the human review checklist and
-  pair it with the automated build pipeline rather than replacing it.
+- EAS automation files now exist:
+  - `eas.json`
+  - `.github/workflows/eas-testflight.yml`
+  - `.github/workflows/eas-production-builds.yml`
+- Keep this document as the human review checklist and pair it with the
+  automated build pipeline rather than replacing it.
