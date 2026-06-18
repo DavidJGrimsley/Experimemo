@@ -52,7 +52,7 @@ Will consider applying for grants to fund development and maintenance, but no mo
 
 ## Team Context
 
-Solo dev
+Solo dev & designer for logos
 
 ## Later Scope & Possibilities
 
