@@ -4,10 +4,16 @@ import {
   type ExperimentRecord,
 } from '../features/experiments/experiment-models';
 
-let experiments: ExperimentRecord[] = [...seedExperiments];
+let experiments: ExperimentRecord[] = [];
+let hasBootstrappedExperiments = false;
 
 export async function ensureLocalDataReady(): Promise<void> {
-  experiments = experiments.length > 0 ? experiments : [...seedExperiments];
+  if (hasBootstrappedExperiments) {
+    return;
+  }
+
+  experiments = [...seedExperiments];
+  hasBootstrappedExperiments = true;
 }
 
 export async function listExperiments(): Promise<ExperimentRecord[]> {
@@ -45,6 +51,22 @@ export async function createExperimentDraft(
   return experiment;
 }
 
+export async function deleteExperiments(ids: string[]): Promise<void> {
+  await ensureLocalDataReady();
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const idsToDelete = new Set(ids);
+  experiments = experiments.filter((experiment) => !idsToDelete.has(experiment.id));
+}
+
+export async function resetExperiments(): Promise<void> {
+  await ensureLocalDataReady();
+  experiments = [];
+}
+
 export async function updateExperiment(
   id: string,
   input: ExperimentDraftInput
@@ -80,5 +102,6 @@ export const experimentDataBoundaryNotes = [
   'Native builds use local-data.native.ts for the Expo SQLite implementation.',
   'Keep experiment screens behind this adapter boundary so SQLite or Supabase can be swapped later.',
   'Attached photos are stored as local picker URI metadata on the experiment record.',
+  'Resetting or deleting all records does not re-seed starter experiments in the same app session.',
   'A later media step can replace local URI references with a stronger file-storage strategy if needed.',
 ];

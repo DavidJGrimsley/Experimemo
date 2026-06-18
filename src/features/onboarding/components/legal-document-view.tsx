@@ -1,4 +1,8 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/app-text';
+import { SurfaceCard } from '@/components/surface-card';
+import { useAppTheme } from '@/theme/provider';
 
 import type { LegalDocument } from '../legal-documents';
 
@@ -7,97 +11,125 @@ interface LegalDocumentViewProps {
 }
 
 function LegalDocumentMeta({ label, value }: { label: string; value: string }) {
+  const theme = useAppTheme();
+  const colors = theme.activeColors;
+
   return (
-    <View style={styles.metaItem}>
-      <Text style={styles.metaLabel}>{label}</Text>
-      <Text style={styles.metaValue}>{value}</Text>
+    <View
+      style={[
+        styles.metaItem,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.primary,
+        },
+      ]}>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontBody,
+          fontSize: 11,
+          fontWeight: '700',
+        }}>
+        {label.toUpperCase()}
+      </AppText>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontBody,
+          fontSize: 13,
+          fontWeight: '700',
+        }}>
+        {value}
+      </AppText>
     </View>
   );
 }
 
 function LegalSectionItem({ title, body }: { title: string; body: string }) {
+  const theme = useAppTheme();
+  const colors = theme.activeColors;
+
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionBody}>{body}</Text>
-    </View>
+    <SurfaceCard>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontBody,
+          fontSize: 17,
+          fontWeight: '800',
+        }}>
+        {title}
+      </AppText>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontBody,
+          fontSize: 14,
+          lineHeight: 21,
+        }}>
+        {body}
+      </AppText>
+    </SurfaceCard>
   );
 }
 
 export function LegalDocumentView({ document }: LegalDocumentViewProps) {
+  const theme = useAppTheme();
+  const colors = theme.activeColors;
+
   return (
-    <ScrollView contentContainerStyle={styles.content} style={styles.screen}>
-      <Text style={styles.title}>{document.title}</Text>
-      <Text style={styles.summary}>{document.summary}</Text>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.content}
+      style={[styles.screen, { backgroundColor: colors.background }]}>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontFamily,
+          fontSize: 28,
+          fontWeight: '800',
+        }}>
+        {document.title}
+      </AppText>
+      <AppText
+        style={{
+          color: colors.text,
+          fontFamily: theme.typography.fontBody,
+          fontSize: 15,
+          lineHeight: 22,
+        }}>
+        {document.summary}
+      </AppText>
       <View style={styles.metaRow}>
         <LegalDocumentMeta label="Effective" value={document.effectiveDate} />
         <LegalDocumentMeta label="Last updated" value={document.lastUpdated} />
       </View>
       {document.sections.map((section) => (
-        <LegalSectionItem key={section.id} title={section.title} body={section.body} />
+        <LegalSectionItem body={section.body} key={section.id} title={section.title} />
       ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    backgroundColor: '#f8fafc',
-    flex: 1,
-  },
   content: {
     gap: 14,
     padding: 20,
-    paddingTop: 84,
-  },
-  title: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  summary: {
-    color: '#334155',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 10,
+    paddingBottom: 28,
   },
   metaItem: {
-    backgroundColor: '#e2e8f0',
     borderRadius: 10,
+    borderWidth: 1,
     gap: 2,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  metaLabel: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  metaValue: {
-    color: '#0f172a',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  section: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 7,
-    padding: 14,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  sectionBody: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 21,
+  screen: {
+    flex: 1,
   },
 });

@@ -1,17 +1,14 @@
-import { Link, useIsFocused } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useIsFocused, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { AppButton } from '@/components/app-button';
+import { AppText } from '@/components/app-text';
+import { ScreenHeader } from '@/components/screen-header';
+import { SurfaceCard } from '@/components/surface-card';
+import { useAppTheme } from '@/theme/provider';
 
 import { listExperiments, type ExperimentRecord } from '../experiments/experiment-store';
-import { useAppTheme } from '../../theme/provider';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -21,9 +18,155 @@ function formatDate(iso: string) {
   });
 }
 
+function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
+  const theme = useAppTheme();
+  const colors = theme.activeColors;
+  const router = useRouter();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() =>
+        router.push({
+          pathname: '/experiment/[id]',
+          params: { id: experiment.id },
+        })
+      }
+      style={styles.cardButton}>
+      <SurfaceCard>
+        <View style={styles.cardTopRow}>
+          <View style={styles.cardTitleWrap}>
+            <AppText
+              style={{
+                color: colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 16,
+                fontWeight: '800',
+              }}>
+              {experiment.title}
+            </AppText>
+            <AppText
+              style={{
+                color: colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 12,
+                lineHeight: 18,
+              }}>
+              {`${experiment.category} - Updated ${formatDate(experiment.updatedAt)}`}
+            </AppText>
+          </View>
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor:
+                  experiment.status === 'active' ? colors.primary : colors.background,
+                borderColor: colors.primary,
+              },
+            ]}>
+            <AppText
+              style={{
+                color: experiment.status === 'active' ? '#ffffff' : colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 12,
+                fontWeight: '800',
+              }}>
+              {experiment.status.toUpperCase()}
+            </AppText>
+          </View>
+        </View>
+
+        <View style={styles.detailList}>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '800',
+            }}>
+            Hypothesis
+          </AppText>
+          <AppText
+            numberOfLines={3}
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            {experiment.hypothesis}
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '800',
+            }}>
+            Results and observations
+          </AppText>
+          <AppText
+            numberOfLines={3}
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            {experiment.resultsNotes || 'No observations recorded yet.'}
+          </AppText>
+        </View>
+
+        {experiment.photoAssets.length > 0 ? (
+          <View style={styles.photoPreviewRow}>
+            <Image
+              source={{ uri: experiment.photoAssets[0].uri }}
+              style={[styles.photoPreview, { borderColor: colors.primary }]}
+            />
+            <AppText
+              style={{
+                color: colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 13,
+                fontWeight: '700',
+                lineHeight: 18,
+              }}>
+              {experiment.photoAssets.length === 1
+                ? '1 attached photo'
+                : `${experiment.photoAssets.length} attached photos`}
+            </AppText>
+          </View>
+        ) : null}
+
+        <View style={styles.footer}>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '700',
+            }}>
+            {`Planned photos: ${experiment.plannedAttachmentCount}`}
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '700',
+            }}>
+            {`Notes ready: ${experiment.notes ? 'Yes' : 'No'}`}
+          </AppText>
+        </View>
+      </SurfaceCard>
+    </Pressable>
+  );
+}
+
 export default function TrackScreen() {
   const theme = useAppTheme();
   const colors = theme.activeColors;
+  const router = useRouter();
   const isFocused = useIsFocused();
   const [experiments, setExperiments] = useState<ExperimentRecord[] | null>(null);
 
@@ -35,7 +178,10 @@ export default function TrackScreen() {
     let active = true;
 
     void listExperiments().then((result) => {
-      if (!active) return;
+      if (!active) {
+        return;
+      }
+
       setExperiments(result);
     });
 
@@ -44,126 +190,94 @@ export default function TrackScreen() {
     };
   }, [isFocused]);
 
+  const grouped = useMemo(() => {
+    const allExperiments = experiments ?? [];
+    return {
+      active: allExperiments.filter((experiment) => experiment.status === 'active'),
+      drafts: allExperiments.filter((experiment) => experiment.status !== 'active'),
+    };
+  }, [experiments]);
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.content}
       style={[styles.screen, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: colors.text,
-              fontFamily: theme.typography.fontFamily,
-              fontWeight:
-                theme.typography.fontFamily === 'System' ||
-                theme.typography.fontFamily === 'monospace'
-                  ? '800'
-                  : 'normal',
-            },
-          ]}>
-          Track experiments
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.text }]}>
-          Review saved drafts and active experiment records. Open any record to update results,
-          notes, and attached photos.
-        </Text>
-      </View>
+      <ScreenHeader
+        showInfoAction
+        subtitle="Review every experiment in one place and reopen any record to keep adding observations, notes, and photos."
+        title="Track experiments"
+      />
 
       {!experiments ? (
         <View style={styles.loadingWrap}>
           <ActivityIndicator color={colors.primary} />
         </View>
+      ) : experiments.length === 0 ? (
+        <SurfaceCard>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 17,
+              fontWeight: '800',
+            }}>
+            No experiments yet
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            Create your first experiment to start recording your process and results.
+          </AppText>
+          <AppButton
+            label="Create experiment"
+            onPress={() => router.push('/new')}
+            style={{ backgroundColor: colors.primary, borderRadius: 999 }}
+          />
+        </SurfaceCard>
       ) : (
-        <View style={styles.list}>
-          {experiments.map((experiment) => (
-            <Link
-              key={experiment.id}
-              href={{
-                pathname: '/experiment/[id]',
-                params: { id: experiment.id },
-              }}
-              asChild>
-              <Pressable
-                accessibilityRole="button"
-                style={StyleSheet.flatten([
-                  styles.card,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.primary,
-                    borderRadius: theme.layout.radius,
-                  },
-                ])}>
-                <View style={styles.row}>
-                  <View style={styles.titleWrap}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>
-                      {experiment.title}
-                    </Text>
-                    <Text style={[styles.cardMeta, { color: colors.text }]}>
-                      {`${experiment.category} · Updated ${formatDate(experiment.updatedAt)}`}
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.badge,
-                      {
-                        backgroundColor:
-                          experiment.status === 'active' ? colors.primary : colors.background,
-                        borderColor: colors.primary,
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        styles.badgeText,
-                        { color: experiment.status === 'active' ? '#ffffff' : colors.text },
-                      ]}>
-                      {experiment.status}
-                    </Text>
-                  </View>
-                </View>
+        <View style={styles.sectionList}>
+          {grouped.active.length > 0 ? (
+            <View style={styles.section}>
+              <AppText
+                style={{
+                  color: colors.text,
+                  fontFamily: theme.typography.fontBody,
+                  fontSize: 13,
+                  fontWeight: '800',
+                }}>
+                ACTIVE
+              </AppText>
+              <View style={styles.list}>
+                {grouped.active.map((experiment) => (
+                  <ExperimentRow experiment={experiment} key={experiment.id} />
+                ))}
+              </View>
+            </View>
+          ) : null}
 
-                <View style={styles.detailList}>
-                  <Text style={[styles.detailLabel, { color: colors.text }]}>Hypothesis</Text>
-                  <Text style={[styles.cardBody, { color: colors.text }]}>
-                    {experiment.hypothesis}
-                  </Text>
-                  <Text style={[styles.detailLabel, { color: colors.text }]}>
-                    Results and observations
-                  </Text>
-                  <Text style={[styles.cardBody, { color: colors.text }]}>
-                    {experiment.resultsNotes || 'No results recorded yet.'}
-                  </Text>
-                </View>
-
-                {experiment.photoAssets.length > 0 ? (
-                  <View style={styles.photoPreviewRow}>
-                    <Image
-                      source={{ uri: experiment.photoAssets[0].uri }}
-                      style={[styles.photoPreview, { borderColor: colors.primary }]}
-                    />
-                    <Text style={[styles.photoPreviewText, { color: colors.text }]}>
-                      {experiment.photoAssets.length === 1
-                        ? '1 attached photo'
-                        : `${experiment.photoAssets.length} attached photos`}
-                    </Text>
-                  </View>
-                ) : null}
-
-                <View style={styles.footer}>
-                  <Text style={[styles.footerText, { color: colors.text }]}>
-                    Attached photos: {experiment.photoAssets.length}
-                  </Text>
-                  <Text style={[styles.footerText, { color: colors.text }]}>
-                    Planned photos: {experiment.plannedAttachmentCount}
-                  </Text>
-                  <Text style={[styles.footerText, { color: colors.text }]}>
-                    Notes ready: {experiment.notes ? 'Yes' : 'No'}
-                  </Text>
-                </View>
-              </Pressable>
-            </Link>
-          ))}
+          {grouped.drafts.length > 0 ? (
+            <View style={styles.section}>
+              <AppText
+                style={{
+                  color: colors.text,
+                  fontFamily: theme.typography.fontBody,
+                  fontSize: 13,
+                  fontWeight: '800',
+                }}>
+                DRAFTS
+              </AppText>
+              <View style={styles.list}>
+                {grouped.drafts.map((experiment) => (
+                  <ExperimentRow experiment={experiment} key={experiment.id} />
+                ))}
+              </View>
+            </View>
+          ) : null}
         </View>
       )}
     </ScrollView>
@@ -171,76 +285,45 @@ export default function TrackScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    gap: 16,
-    padding: 20,
-    paddingBottom: 28,
-  },
-  header: {
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  loadingWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  list: {
-    gap: 12,
-  },
-  card: {
+  badge: {
+    borderRadius: 999,
     borderWidth: 1,
-    gap: 12,
-    padding: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  row: {
+  cardButton: {
+    borderRadius: 12,
+  },
+  cardTitleWrap: {
+    flex: 1,
+    gap: 4,
+  },
+  cardTopRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'space-between',
   },
-  titleWrap: {
-    flex: 1,
-    gap: 4,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cardMeta: {
-    fontSize: 12,
-    lineHeight: 18,
-    opacity: 0.8,
+  content: {
+    gap: 20,
+    padding: 20,
+    paddingBottom: 28,
   },
   detailList: {
     gap: 4,
   },
-  detailLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    opacity: 0.8,
-    textTransform: 'uppercase',
-  },
-  cardBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  photoPreviewRow: {
-    alignItems: 'center',
+  footer: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  list: {
+    gap: 12,
+  },
+  loadingWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   photoPreview: {
     borderRadius: 12,
@@ -248,31 +331,18 @@ const styles = StyleSheet.create({
     height: 56,
     width: 56,
   },
-  photoPreviewText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-  badge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  footer: {
+  photoPreviewRow: {
+    alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
-  footerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    opacity: 0.85,
+  screen: {
+    flex: 1,
+  },
+  section: {
+    gap: 10,
+  },
+  sectionList: {
+    gap: 20,
   },
 });

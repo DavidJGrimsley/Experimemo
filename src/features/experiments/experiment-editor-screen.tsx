@@ -1,7 +1,14 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+
+import { AppButton } from '@/components/app-button';
+import { AppTextField } from '@/components/app-text-field';
+import { AppText } from '@/components/app-text';
+import { ScreenHeader } from '@/components/screen-header';
+import { SurfaceCard } from '@/components/surface-card';
+import { useAppTheme } from '@/theme/provider';
 
 import {
   fromExperimentDraftInput,
@@ -10,7 +17,6 @@ import {
 } from './experiment-form-types';
 import { pickExperimentPhotos } from './photo-picker';
 import { getExperimentById, updateExperiment, type ExperimentRecord } from './experiment-store';
-import { useAppTheme } from '../../theme/provider';
 
 type ExperimentFormTextFieldKey = Exclude<keyof ExperimentFormState, 'photoAssets'>;
 
@@ -28,7 +34,7 @@ const editorFields: {
   },
   {
     key: 'category',
-    label: 'Folder or category',
+    label: 'Category',
     placeholder: 'Choose a category',
   },
   {
@@ -52,13 +58,13 @@ const editorFields: {
   {
     key: 'resultsNotes',
     label: 'Results and observations',
-    placeholder: 'Update this as real observations come in.',
+    placeholder: 'Add observations as they come in.',
     multiline: true,
   },
   {
     key: 'notes',
     label: 'Field notes',
-    placeholder: 'Add reminders, anomalies, or context.',
+    placeholder: 'Capture reminders, anomalies, or context.',
     multiline: true,
   },
   {
@@ -76,7 +82,7 @@ function buildErrors(form: ExperimentFormState) {
     nextErrors.title = 'Give this experiment a name.';
   }
   if (!form.hypothesis.trim()) {
-    nextErrors.hypothesis = 'Keep the experiment question visible here.';
+    nextErrors.hypothesis = 'Keep the question you are testing visible here.';
   }
 
   return nextErrors;
@@ -150,304 +156,183 @@ export default function ExperimentEditorScreen() {
   if (!experiment || !form) {
     return (
       <View style={[styles.emptyScreen, { backgroundColor: colors.background }]}>
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>Experiment not found</Text>
-        <Text style={[styles.emptyBody, { color: colors.text }]}>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontFamily,
+            fontSize: 24,
+            fontWeight: '800',
+          }}>
+          Experiment not found
+        </AppText>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 15,
+            lineHeight: 22,
+          }}>
           This record is no longer available. Return to Track and open another experiment.
-        </Text>
+        </AppText>
       </View>
     );
   }
 
   return (
-    <KeyboardAwareScrollView
-      bottomOffset={24}
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-      style={[styles.screen, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.eyebrow,
-            {
-              color: colors.primary,
-              fontFamily: theme.typography.fontFamily,
-            },
-          ]}>
-          Experiment Record
-        </Text>
-        <Text
-          style={[
-            styles.title,
-            {
+    <>
+      <Stack.Screen
+        options={{
+          headerBackButtonDisplayMode: 'minimal',
+          title: '',
+        }}
+      />
+      <KeyboardAwareScrollView
+        bottomOffset={24}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        style={[styles.screen, { backgroundColor: colors.background }]}>
+        <ScreenHeader
+          showInfoAction
+          subtitle="Update the plan, record what happened, and keep your supporting notes and photos together."
+          title={experiment.title}
+          titleNumberOfLines={3}
+        />
+
+        <SurfaceCard>
+          <AppText
+            style={{
               color: colors.text,
-              fontFamily: theme.typography.fontFamily,
-              fontWeight:
-                theme.typography.fontFamily === 'System' ||
-                theme.typography.fontFamily === 'monospace'
-                  ? '800'
-                  : 'normal',
-            },
-          ]}>
-          Edit experiment
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.text }]}>
-          Update the procedure, record results and observations, refine notes, and manage attached
-          photos from one place.
-        </Text>
-      </View>
+              fontFamily: theme.typography.fontBody,
+              fontSize: 17,
+              fontWeight: '800',
+            }}>
+            Status
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            {`This experiment is currently marked as ${experiment.status}. Save any updates here when you add new observations or refine the setup.`}
+          </AppText>
+        </SurfaceCard>
 
-      <View
-        style={[
-          styles.statusCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.primary,
-            borderRadius: theme.layout.radius,
-          },
-        ]}>
-        <Text style={[styles.statusTitle, { color: colors.text }]}>{experiment.title}</Text>
-        <Text style={[styles.statusBody, { color: colors.text }]}>
-          Current status: {experiment.status}. Updating results here is the intended follow-up path
-          after creating a draft, and this is also where attached photos can be reviewed later.
-        </Text>
-      </View>
-
-      <View style={styles.formSection}>
-        {editorFields.map((field) => (
-          <View
-            key={field.key}
-            style={[
-              styles.fieldCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: errors[field.key] ? colors.warning : colors.primary,
-                borderRadius: theme.layout.radius,
-              },
-            ]}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>{field.label}</Text>
-            <TextInput
+        <View style={styles.formSection}>
+          {editorFields.map((field) => (
+            <AppTextField
+              error={errors[field.key]}
+              key={field.key}
               keyboardType={field.keyboardType}
+              label={field.label}
               multiline={field.multiline}
               onChangeText={(value) => {
                 setForm((current) => (current ? { ...current, [field.key]: value } : current));
                 setErrors((current) => ({ ...current, [field.key]: undefined }));
               }}
               placeholder={field.placeholder}
-              placeholderTextColor="#6b7280"
-              style={[
-                styles.input,
-                styles.inputBase,
-                field.multiline ? styles.multilineInput : styles.singleLineInput,
-                {
-                  backgroundColor: colors.background,
-                  borderColor: errors[field.key] ? colors.warning : colors.surface,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical={field.multiline ? 'top' : 'center'}
               value={form[field.key]}
             />
-            {errors[field.key] ? (
-              <Text style={[styles.errorText, { color: colors.warning }]}>{errors[field.key]}</Text>
-            ) : null}
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
 
-      <View
-        style={[
-          styles.statusCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.primary,
-            borderRadius: theme.layout.radius,
-          },
-        ]}>
-        <Text style={[styles.statusTitle, { color: colors.text }]}>Attached photos</Text>
-        <Text style={[styles.statusBody, { color: colors.text }]}>
-          Add images from your library and keep them attached to this experiment record.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            if (!form) {
-              return;
-            }
-
-            void pickExperimentPhotos(form.photoAssets).then((photoAssets) => {
-              setForm((current) => (current ? { ...current, photoAssets } : current));
-            });
-          }}
-          style={StyleSheet.flatten([
-            styles.secondaryButton,
-            {
+        <SurfaceCard>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 17,
+              fontWeight: '800',
+            }}>
+            Attached photos
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            Keep your reference photos with the experiment so everything stays easy to review later.
+          </AppText>
+          <AppButton
+            label="Add photos"
+            onPress={() => {
+              void pickExperimentPhotos(form.photoAssets).then((photoAssets) => {
+                setForm((current) => (current ? { ...current, photoAssets } : current));
+              });
+            }}
+            style={{
               backgroundColor: colors.background,
               borderColor: colors.primary,
-            },
-          ])}>
-          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Add photos</Text>
-        </Pressable>
-        {form.photoAssets.length > 0 ? (
-          <View style={styles.photoGrid}>
-            {form.photoAssets.map((photo) => (
-              <Pressable
-                key={photo.id}
-                accessibilityRole="button"
-                onPress={() => {
-                  setForm((current) =>
-                    current
-                      ? {
-                          ...current,
-                          photoAssets: current.photoAssets.filter((asset) => asset.id !== photo.id),
-                        }
-                      : current
-                  );
-                }}
-                style={styles.photoCard}>
-                <Image
-                  source={{ uri: photo.uri }}
-                  style={[styles.photoThumb, { borderColor: colors.primary }]}
-                />
-                <Text style={[styles.removeText, { color: colors.text }]}>Remove</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-      </View>
+              borderRadius: 999,
+              borderWidth: 1,
+            }}
+            variant="outlined"
+          />
+          {form.photoAssets.length > 0 ? (
+            <View style={styles.photoGrid}>
+              {form.photoAssets.map((photo) => (
+                <Pressable
+                  key={photo.id}
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setForm((current) =>
+                      current
+                        ? {
+                            ...current,
+                            photoAssets: current.photoAssets.filter(
+                              (asset) => asset.id !== photo.id
+                            ),
+                          }
+                        : current
+                    );
+                  }}
+                  style={styles.photoCard}>
+                  <Image
+                    source={{ uri: photo.uri }}
+                    style={[styles.photoThumb, { borderColor: colors.primary }]}
+                  />
+                  <AppText
+                    style={{
+                      color: colors.text,
+                      fontFamily: theme.typography.fontBody,
+                      fontSize: 12,
+                      fontWeight: '700',
+                      textAlign: 'center',
+                    }}>
+                    Remove
+                  </AppText>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </SurfaceCard>
 
-      <Pressable
-        accessibilityRole="button"
-        disabled={isSaving}
-        onPress={() => {
-          void handleSave();
-        }}
-        style={StyleSheet.flatten([
-          styles.primaryButton,
-          {
+        <AppButton
+          disabled={isSaving}
+          label={isSaving ? 'Saving...' : 'Save changes'}
+          onPress={() => {
+            void handleSave();
+          }}
+          style={{
             backgroundColor: colors.primary,
+            borderRadius: 999,
             opacity: isSaving ? 0.7 : 1,
-          },
-        ])}>
-        <Text style={styles.primaryButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
-      </Pressable>
-    </KeyboardAwareScrollView>
+          }}
+        />
+      </KeyboardAwareScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   content: {
     gap: 16,
     padding: 20,
     paddingBottom: 28,
-  },
-  header: {
-    gap: 8,
-  },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  statusCard: {
-    borderWidth: 1,
-    gap: 6,
-    padding: 16,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  statusBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  formSection: {
-    gap: 12,
-  },
-  fieldCard: {
-    borderWidth: 1,
-    gap: 8,
-    padding: 16,
-  },
-  fieldLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  input: {
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  inputBase: {
-    fontSize: 14,
-    lineHeight: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  singleLineInput: {
-    minHeight: 50,
-  },
-  multilineInput: {
-    minHeight: 112,
-  },
-  errorText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  primaryButton: {
-    alignItems: 'center',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 10,
-  },
-  photoCard: {
-    gap: 6,
-  },
-  photoThumb: {
-    borderRadius: 12,
-    borderWidth: 1,
-    height: 84,
-    width: 84,
-  },
-  removeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    textAlign: 'center',
   },
   emptyScreen: {
     flex: 1,
@@ -455,12 +340,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+  formSection: {
+    gap: 12,
   },
-  emptyBody: {
-    fontSize: 15,
-    lineHeight: 22,
+  photoCard: {
+    gap: 6,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  photoThumb: {
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 84,
+    width: 84,
+  },
+  screen: {
+    flex: 1,
   },
 });
