@@ -52,3 +52,5 @@
 - [x] Put an info circle icon in the header which should open up a large modal with settings, about, and feedback sections. Settings will contain 'Delete Experiments' and 'Reset App' buttons, which will allow the user to delete experiments from a list or reset the entire app data. The about section will have info about the dev (me) and the feedback section will have a link to the GitHub repo and instructions for how to submit feedback and issues.
 - [x] the 'Experiment' needs work. specifically, the results section. Let's just rename that to only 'Observations' but below that we should have a section for Results which will be more dynamic and allow the user to track multiple result entries with a date and time and notes and photos for each result entry. This will allow the user to track the experiment over time and have a more complete picture of how it went.
 - [x] Add a 'Conclusion' section below Field Notes
+- [x] Add the ability to take pictures from the add photo button instead of just uploading from the library like most apps do.
+- [x] Fix issue where the view border colors are sometimes orange instead of green. 

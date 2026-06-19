@@ -33,6 +33,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
   const router = useRouter();
 
   const isCompleted = experiment.status === 'complete';
+  const statusColor = isCompleted ? colors.secondary : colors.primary;
   const latestResult = experiment.resultEntries[0];
 
   return (
@@ -45,7 +46,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
         })
       }
       style={styles.cardButton}>
-      <SurfaceCard>
+      <SurfaceCard style={{ borderColor: statusColor }}>
         <View style={styles.cardTopRow}>
           <View style={styles.cardTitleWrap}>
             <AppText
@@ -71,8 +72,8 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
             style={[
               styles.badge,
               {
-                backgroundColor: isCompleted ? colors.secondary : colors.primary,
-                borderColor: isCompleted ? colors.secondary : colors.primary,
+                backgroundColor: statusColor,
+                borderColor: statusColor,
               },
             ]}>
             <AppText
