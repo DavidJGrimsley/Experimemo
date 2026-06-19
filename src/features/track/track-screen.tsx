@@ -18,10 +18,22 @@ function formatDate(iso: string) {
   });
 }
 
+function formatResultDate(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
   const router = useRouter();
+
+  const isCompleted = experiment.status === 'complete';
+  const latestResult = experiment.resultEntries[0];
 
   return (
     <Pressable
@@ -59,14 +71,13 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
             style={[
               styles.badge,
               {
-                backgroundColor:
-                  experiment.status === 'active' ? colors.primary : colors.background,
-                borderColor: colors.primary,
+                backgroundColor: isCompleted ? colors.secondary : colors.primary,
+                borderColor: isCompleted ? colors.secondary : colors.primary,
               },
             ]}>
             <AppText
               style={{
-                color: experiment.status === 'active' ? '#ffffff' : colors.text,
+                color: '#ffffff',
                 fontFamily: theme.typography.fontBody,
                 fontSize: 12,
                 fontWeight: '800',
@@ -103,7 +114,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 12,
               fontWeight: '800',
             }}>
-            Results and observations
+            Observations
           </AppText>
           <AppText
             numberOfLines={3}
@@ -113,7 +124,30 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 14,
               lineHeight: 20,
             }}>
-            {experiment.resultsNotes || 'No observations recorded yet.'}
+            {experiment.observationsNotes || 'No observations recorded yet.'}
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '800',
+            }}>
+            Results
+          </AppText>
+          <AppText
+            numberOfLines={3}
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            {latestResult
+              ? `${experiment.resultEntries.length} ${
+                  experiment.resultEntries.length === 1 ? 'entry' : 'entries'
+                } - Latest ${formatResultDate(latestResult.recordedAt)}: ${latestResult.notes || 'Photos only'}`
+              : 'No result entries yet.'}
           </AppText>
         </View>
 
@@ -155,7 +189,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 12,
               fontWeight: '700',
             }}>
-            {`Notes ready: ${experiment.notes ? 'Yes' : 'No'}`}
+            {`Conclusion: ${experiment.conclusionNotes ? 'Ready' : 'Open'}`}
           </AppText>
         </View>
       </SurfaceCard>
@@ -194,7 +228,7 @@ export default function TrackScreen() {
     const allExperiments = experiments ?? [];
     return {
       active: allExperiments.filter((experiment) => experiment.status === 'active'),
-      drafts: allExperiments.filter((experiment) => experiment.status !== 'active'),
+      completed: allExperiments.filter((experiment) => experiment.status === 'complete'),
     };
   }, [experiments]);
 
@@ -260,7 +294,7 @@ export default function TrackScreen() {
             </View>
           ) : null}
 
-          {grouped.drafts.length > 0 ? (
+          {grouped.completed.length > 0 ? (
             <View style={styles.section}>
               <AppText
                 style={{
@@ -269,10 +303,10 @@ export default function TrackScreen() {
                   fontSize: 13,
                   fontWeight: '800',
                 }}>
-                DRAFTS
+                COMPLETED
               </AppText>
               <View style={styles.list}>
-                {grouped.drafts.map((experiment) => (
+                {grouped.completed.map((experiment) => (
                   <ExperimentRow experiment={experiment} key={experiment.id} />
                 ))}
               </View>

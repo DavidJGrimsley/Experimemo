@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/provider';
@@ -11,6 +12,7 @@ interface ScreenHeaderProps {
   eyebrow?: string;
   showInfoAction?: boolean;
   titleNumberOfLines?: number;
+  rightAccessory?: ReactNode;
 }
 
 export function ScreenHeader({
@@ -19,6 +21,7 @@ export function ScreenHeader({
   eyebrow,
   showInfoAction = false,
   titleNumberOfLines,
+  rightAccessory,
 }: ScreenHeaderProps) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
@@ -52,7 +55,9 @@ export function ScreenHeader({
           </AppText>
         </View>
 
-        {showInfoAction ? (
+        {rightAccessory ? (
+          rightAccessory
+        ) : showInfoAction ? (
           <Link href="/modal" asChild>
             <Pressable
               accessibilityLabel="Open app info and settings"
