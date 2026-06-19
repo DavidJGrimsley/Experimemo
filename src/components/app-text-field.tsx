@@ -46,7 +46,6 @@ export function AppTextField({
         {label}
       </AppText>
       <RNTextInput
-        defaultValue={value}
         keyboardType={keyboardType}
         multiline={multiline}
         numberOfLines={multiline ? 4 : 1}
@@ -67,6 +66,7 @@ export function AppTextField({
           paddingVertical: 12,
           textAlignVertical: multiline ? 'top' : 'center',
         }}
+        value={value}
       />
       {error ? (
         <AppText

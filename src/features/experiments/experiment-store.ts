@@ -2,6 +2,7 @@ export type {
   ExperimentInput,
   ExperimentPhotoAsset,
   ExperimentRecord,
+  ExperimentResultEntry,
   ExperimentStatus,
 } from './experiment-models';
 

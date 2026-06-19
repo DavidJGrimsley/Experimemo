@@ -18,7 +18,10 @@ import {
 import { pickExperimentPhotos } from '../experiments/photo-picker';
 import { createExperiment } from '../experiments/experiment-store';
 
-type ExperimentFormTextFieldKey = Exclude<keyof ExperimentFormState, 'photoAssets'>;
+type ExperimentFormTextFieldKey = Exclude<
+  keyof ExperimentFormState,
+  'photoAssets' | 'resultEntries'
+>;
 
 const fields: {
   key: ExperimentFormTextFieldKey;
@@ -56,15 +59,21 @@ const fields: {
     multiline: true,
   },
   {
-    key: 'resultsNotes',
-    label: 'Results and observations',
-    placeholder: 'You can leave this blank until you start collecting results.',
+    key: 'observationsNotes',
+    label: 'Observations',
+    placeholder: 'You can leave this blank until you start recording observations.',
     multiline: true,
   },
   {
     key: 'notes',
     label: 'Field notes',
     placeholder: 'Capture reminders, context, or setup details.',
+    multiline: true,
+  },
+  {
+    key: 'conclusionNotes',
+    label: 'Conclusion',
+    placeholder: 'Summarize what the experiment shows when you are ready.',
     multiline: true,
   },
   {

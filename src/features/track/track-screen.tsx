@@ -18,12 +18,22 @@ function formatDate(iso: string) {
   });
 }
 
+function formatResultDate(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
   const router = useRouter();
 
   const isCompleted = experiment.status === 'complete';
+  const latestResult = experiment.resultEntries[0];
 
   return (
     <Pressable
@@ -104,7 +114,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 12,
               fontWeight: '800',
             }}>
-            Results and observations
+            Observations
           </AppText>
           <AppText
             numberOfLines={3}
@@ -114,7 +124,30 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 14,
               lineHeight: 20,
             }}>
-            {experiment.resultsNotes || 'No observations recorded yet.'}
+            {experiment.observationsNotes || 'No observations recorded yet.'}
+          </AppText>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 12,
+              fontWeight: '800',
+            }}>
+            Results
+          </AppText>
+          <AppText
+            numberOfLines={3}
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+            {latestResult
+              ? `${experiment.resultEntries.length} ${
+                  experiment.resultEntries.length === 1 ? 'entry' : 'entries'
+                } - Latest ${formatResultDate(latestResult.recordedAt)}: ${latestResult.notes || 'Photos only'}`
+              : 'No result entries yet.'}
           </AppText>
         </View>
 
@@ -156,7 +189,7 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
               fontSize: 12,
               fontWeight: '700',
             }}>
-            {`Notes ready: ${experiment.notes ? 'Yes' : 'No'}`}
+            {`Conclusion: ${experiment.conclusionNotes ? 'Ready' : 'Open'}`}
           </AppText>
         </View>
       </SurfaceCard>

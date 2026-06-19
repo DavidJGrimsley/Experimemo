@@ -39,6 +39,24 @@ function sortExperiments(experiments: ExperimentRecord[]) {
   return [...experiments].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
+function parseResultEntries(value: string): ExperimentRecord['resultEntries'] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? (parsed as ExperimentRecord['resultEntries']) : [];
+  } catch {
+    return [];
+  }
+}
+
+function parsePhotoAssets(value: string): ExperimentRecord['photoAssets'] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? (parsed as ExperimentRecord['photoAssets']) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function setBootstrapSentinel(db: SQLite.SQLiteDatabase) {
   await db.runAsync(
     'INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)',
@@ -55,7 +73,9 @@ function normalizeRecord(record: {
   procedure: string;
   data_plan: string;
   results_notes: string;
+  result_entries: string;
   notes: string;
+  conclusion_notes: string;
   planned_attachment_count: number;
   photo_assets: string;
   status: ExperimentRecord['status'];
@@ -69,10 +89,12 @@ function normalizeRecord(record: {
     hypothesis: record.hypothesis,
     procedure: record.procedure,
     dataPlan: record.data_plan,
-    resultsNotes: record.results_notes,
+    observationsNotes: record.results_notes,
+    resultEntries: parseResultEntries(record.result_entries),
     notes: record.notes,
+    conclusionNotes: record.conclusion_notes,
     plannedAttachmentCount: record.planned_attachment_count,
-    photoAssets: JSON.parse(record.photo_assets || '[]') as ExperimentRecord['photoAssets'],
+    photoAssets: parsePhotoAssets(record.photo_assets),
     status: record.status === 'complete' ? 'complete' : 'active',
     createdAt: record.created_at,
     updatedAt: record.updated_at,
@@ -104,7 +126,9 @@ export async function ensureLocalDataReady(): Promise<void> {
         procedure TEXT NOT NULL,
         data_plan TEXT NOT NULL,
         results_notes TEXT NOT NULL,
+        result_entries TEXT NOT NULL DEFAULT '[]',
         notes TEXT NOT NULL,
+        conclusion_notes TEXT NOT NULL DEFAULT '',
         planned_attachment_count INTEGER NOT NULL DEFAULT 0,
         photo_assets TEXT NOT NULL DEFAULT '[]',
         status TEXT NOT NULL,
@@ -117,6 +141,24 @@ export async function ensureLocalDataReady(): Promise<void> {
       await db.execAsync(`
         ALTER TABLE experiments
         ADD COLUMN photo_assets TEXT NOT NULL DEFAULT '[]';
+      `);
+    } catch {
+      // Older installs may already have this column, so the migration can noop safely.
+    }
+
+    try {
+      await db.execAsync(`
+        ALTER TABLE experiments
+        ADD COLUMN result_entries TEXT NOT NULL DEFAULT '[]';
+      `);
+    } catch {
+      // Older installs may already have this column, so the migration can noop safely.
+    }
+
+    try {
+      await db.execAsync(`
+        ALTER TABLE experiments
+        ADD COLUMN conclusion_notes TEXT NOT NULL DEFAULT '';
       `);
     } catch {
       // Older installs may already have this column, so the migration can noop safely.
@@ -152,21 +194,25 @@ export async function ensureLocalDataReady(): Promise<void> {
           procedure,
           data_plan,
           results_notes,
+          result_entries,
           notes,
+          conclusion_notes,
           planned_attachment_count,
           photo_assets,
           status,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         experiment.id,
         experiment.title,
         experiment.category,
         experiment.hypothesis,
         experiment.procedure,
         experiment.dataPlan,
-        experiment.resultsNotes,
+        experiment.observationsNotes,
+        JSON.stringify(experiment.resultEntries),
         experiment.notes,
+        experiment.conclusionNotes,
         experiment.plannedAttachmentCount,
         JSON.stringify(experiment.photoAssets),
         experiment.status,
@@ -199,7 +245,9 @@ export async function listExperiments(): Promise<ExperimentRecord[]> {
       procedure: string;
       data_plan: string;
       results_notes: string;
+      result_entries: string;
       notes: string;
+      conclusion_notes: string;
       planned_attachment_count: number;
       photo_assets: string;
       status: ExperimentRecord['status'];
@@ -232,7 +280,9 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
       procedure: string;
       data_plan: string;
       results_notes: string;
+      result_entries: string;
       notes: string;
+      conclusion_notes: string;
       planned_attachment_count: number;
       photo_assets: string;
       status: ExperimentRecord['status'];
@@ -259,8 +309,10 @@ export async function createExperiment(input: ExperimentInput): Promise<Experime
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     status: 'active',
@@ -284,21 +336,25 @@ export async function createExperiment(input: ExperimentInput): Promise<Experime
         procedure,
         data_plan,
         results_notes,
+        result_entries,
         notes,
+        conclusion_notes,
         planned_attachment_count,
         photo_assets,
         status,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       experiment.id,
       experiment.title,
       experiment.category,
       experiment.hypothesis,
       experiment.procedure,
       experiment.dataPlan,
-      experiment.resultsNotes,
+      experiment.observationsNotes,
+      JSON.stringify(experiment.resultEntries),
       experiment.notes,
+      experiment.conclusionNotes,
       experiment.plannedAttachmentCount,
       JSON.stringify(experiment.photoAssets),
       experiment.status,
@@ -377,8 +433,10 @@ export async function updateExperiment(
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     updatedAt: new Date().toISOString(),
@@ -399,15 +457,18 @@ export async function updateExperiment(
     await db.runAsync(
       `UPDATE experiments
        SET title = ?, category = ?, hypothesis = ?, procedure = ?, data_plan = ?,
-           results_notes = ?, notes = ?, planned_attachment_count = ?, photo_assets = ?, status = ?, updated_at = ?
+           results_notes = ?, result_entries = ?, notes = ?, conclusion_notes = ?,
+           planned_attachment_count = ?, photo_assets = ?, status = ?, updated_at = ?
        WHERE id = ?`,
       updated.title,
       updated.category,
       updated.hypothesis,
       updated.procedure,
       updated.dataPlan,
-      updated.resultsNotes,
+      updated.observationsNotes,
+      JSON.stringify(updated.resultEntries),
       updated.notes,
+      updated.conclusionNotes,
       updated.plannedAttachmentCount,
       JSON.stringify(updated.photoAssets),
       updated.status,
