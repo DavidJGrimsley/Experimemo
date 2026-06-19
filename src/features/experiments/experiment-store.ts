@@ -1,17 +1,18 @@
 export type {
-  ExperimentDraftInput,
+  ExperimentInput,
   ExperimentPhotoAsset,
   ExperimentRecord,
   ExperimentStatus,
 } from './experiment-models';
 
 export {
-  createExperimentDraft,
+  createExperiment,
   deleteExperiments,
   ensureLocalDataReady,
   getExperimentById,
   listExperiments,
   resetExperiments,
   updateExperiment,
+  updateExperimentStatus,
   experimentDataBoundaryNotes,
 } from '../../services/local-data';

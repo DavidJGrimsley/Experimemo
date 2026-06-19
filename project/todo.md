@@ -46,7 +46,7 @@
 - [x] Replace everything possible with universal components from Expo UI and use nativetabs from Expo UI as well for the tab navigator.
 - [x] Remove developer facing notes and todos from the app screens - make all copy user-facing.
 - [x] Remove 'what the results field means' view from create page
-- [ ] in the experiment [id] page, Add a toggle to mark experiments as complete and move them to a completed section in the track page
+- [x] in the experiment [id] page, Add a toggle to mark experiments as complete and move them to a completed section in the track page
 - [x] The experiment [id] page has header issues, too large and doesn't say the name of the experiment but the name may be too long so let's just leave that blank and have the experiment name as the title to replace 'edit experiment'.
 - [x] Remove the settings tab
 - [x] Put an info circle icon in the header which should open up a large modal with settings, about, and feedback sections. Settings will contain 'Delete Experiments' and 'Reset App' buttons, which will allow the user to delete experiments from a list or reset the entire app data. The about section will have info about the dev (me) and the feedback section will have a link to the GitHub repo and instructions for how to submit feedback and issues.

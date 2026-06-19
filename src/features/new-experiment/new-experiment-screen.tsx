@@ -12,11 +12,11 @@ import { useAppTheme } from '@/theme/provider';
 
 import {
   initialExperimentFormState,
-  toExperimentDraftInput,
+  toExperimentInput,
   type ExperimentFormState,
 } from '../experiments/experiment-form-types';
 import { pickExperimentPhotos } from '../experiments/photo-picker';
-import { createExperimentDraft } from '../experiments/experiment-store';
+import { createExperiment } from '../experiments/experiment-store';
 
 type ExperimentFormTextFieldKey = Exclude<keyof ExperimentFormState, 'photoAssets'>;
 
@@ -110,7 +110,7 @@ export default function NewExperimentScreen() {
     setIsSaving(true);
 
     try {
-      await createExperimentDraft(toExperimentDraftInput(form));
+      await createExperiment(toExperimentInput(form));
       startTransition(() => {
         setForm(initialExperimentFormState);
         setErrors({});

@@ -23,6 +23,8 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
   const colors = theme.activeColors;
   const router = useRouter();
 
+  const isCompleted = experiment.status === 'complete';
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -59,14 +61,13 @@ function ExperimentRow({ experiment }: { experiment: ExperimentRecord }) {
             style={[
               styles.badge,
               {
-                backgroundColor:
-                  experiment.status === 'active' ? colors.primary : colors.background,
-                borderColor: colors.primary,
+                backgroundColor: isCompleted ? colors.secondary : colors.primary,
+                borderColor: isCompleted ? colors.secondary : colors.primary,
               },
             ]}>
             <AppText
               style={{
-                color: experiment.status === 'active' ? '#ffffff' : colors.text,
+                color: '#ffffff',
                 fontFamily: theme.typography.fontBody,
                 fontSize: 12,
                 fontWeight: '800',
@@ -194,7 +195,7 @@ export default function TrackScreen() {
     const allExperiments = experiments ?? [];
     return {
       active: allExperiments.filter((experiment) => experiment.status === 'active'),
-      drafts: allExperiments.filter((experiment) => experiment.status !== 'active'),
+      completed: allExperiments.filter((experiment) => experiment.status === 'complete'),
     };
   }, [experiments]);
 
@@ -260,7 +261,7 @@ export default function TrackScreen() {
             </View>
           ) : null}
 
-          {grouped.drafts.length > 0 ? (
+          {grouped.completed.length > 0 ? (
             <View style={styles.section}>
               <AppText
                 style={{
@@ -269,10 +270,10 @@ export default function TrackScreen() {
                   fontSize: 13,
                   fontWeight: '800',
                 }}>
-                DRAFTS
+                COMPLETED
               </AppText>
               <View style={styles.list}>
-                {grouped.drafts.map((experiment) => (
+                {grouped.completed.map((experiment) => (
                   <ExperimentRow experiment={experiment} key={experiment.id} />
                 ))}
               </View>

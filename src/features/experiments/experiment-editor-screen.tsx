@@ -1,6 +1,6 @@
-import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Image, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { AppButton } from '@/components/app-button';
@@ -11,12 +11,17 @@ import { SurfaceCard } from '@/components/surface-card';
 import { useAppTheme } from '@/theme/provider';
 
 import {
-  fromExperimentDraftInput,
-  toExperimentDraftInput,
+  fromExperimentInput,
+  toExperimentInput,
   type ExperimentFormState,
 } from './experiment-form-types';
 import { pickExperimentPhotos } from './photo-picker';
-import { getExperimentById, updateExperiment, type ExperimentRecord } from './experiment-store';
+import {
+  getExperimentById,
+  updateExperiment,
+  updateExperimentStatus,
+  type ExperimentRecord,
+} from './experiment-store';
 
 type ExperimentFormTextFieldKey = Exclude<keyof ExperimentFormState, 'photoAssets'>;
 
@@ -95,10 +100,13 @@ export default function ExperimentEditorScreen() {
   const [experiment, setExperiment] = useState<ExperimentRecord | null>(null);
   const [form, setForm] = useState<ExperimentFormState | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof ExperimentFormState, string>>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const hasLoadedFormRef = useRef(false);
+  const saveRequestRef = useRef(0);
 
   useEffect(() => {
     let active = true;
+    hasLoadedFormRef.current = false;
 
     void getExperimentById(id).then((result) => {
       if (!active) {
@@ -108,7 +116,7 @@ export default function ExperimentEditorScreen() {
       setExperiment(result);
       if (result) {
         setForm(
-          fromExperimentDraftInput({
+          fromExperimentInput({
             title: result.title,
             category: result.category,
             hypothesis: result.hypothesis,
@@ -128,28 +136,52 @@ export default function ExperimentEditorScreen() {
     };
   }, [id]);
 
-  async function handleSave() {
+  useEffect(() => {
     if (!form) {
       return;
     }
 
-    const nextErrors = buildErrors(form);
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
+    if (!hasLoadedFormRef.current) {
+      hasLoadedFormRef.current = true;
       return;
     }
 
-    setIsSaving(true);
+    const nextErrors = buildErrors(form);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      const requestId = saveRequestRef.current + 1;
+      saveRequestRef.current = requestId;
+
+      void updateExperiment(id, toExperimentInput(form)).then((updated) => {
+        if (updated && saveRequestRef.current === requestId) {
+          setExperiment(updated);
+        }
+      });
+    }, 600);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [form, id]);
+
+  async function handleStatusChange(isActive: boolean) {
+    if (!experiment || isUpdatingStatus) {
+      return;
+    }
+
+    const nextStatus = isActive ? 'active' : 'complete';
+    setIsUpdatingStatus(true);
 
     try {
-      const updated = await updateExperiment(id, toExperimentDraftInput(form));
+      const updated = await updateExperimentStatus(experiment.id, nextStatus);
       if (updated) {
         setExperiment(updated);
-        router.back();
       }
     } finally {
-      setIsSaving(false);
+      setIsUpdatingStatus(false);
     }
   }
 
@@ -193,32 +225,37 @@ export default function ExperimentEditorScreen() {
         keyboardShouldPersistTaps="handled"
         style={[styles.screen, { backgroundColor: colors.background }]}>
         <ScreenHeader
-          showInfoAction
+          rightAccessory={
+            <View style={styles.statusToggle}>
+              <AppText
+                style={{
+                  color: colors.text,
+                  fontFamily: theme.typography.fontBody,
+                  fontSize: 13,
+                  fontWeight: '800',
+                }}>
+                {experiment.status === 'complete' ? 'Complete' : 'Active'}
+              </AppText>
+              <Switch
+                disabled={isUpdatingStatus}
+                ios_backgroundColor={colors.secondary}
+                onValueChange={(value) => {
+                  void handleStatusChange(value);
+                }}
+                testID="experiment-active-switch"
+                thumbColor="#ffffff"
+                trackColor={{
+                  false: colors.secondary,
+                  true: colors.primary,
+                }}
+                value={experiment.status !== 'complete'}
+              />
+            </View>
+          }
           subtitle="Update the plan, record what happened, and keep your supporting notes and photos together."
           title={experiment.title}
           titleNumberOfLines={3}
         />
-
-        <SurfaceCard>
-          <AppText
-            style={{
-              color: colors.text,
-              fontFamily: theme.typography.fontBody,
-              fontSize: 17,
-              fontWeight: '800',
-            }}>
-            Status
-          </AppText>
-          <AppText
-            style={{
-              color: colors.text,
-              fontFamily: theme.typography.fontBody,
-              fontSize: 14,
-              lineHeight: 20,
-            }}>
-            {`This experiment is currently marked as ${experiment.status}. Save any updates here when you add new observations or refine the setup.`}
-          </AppText>
-        </SurfaceCard>
 
         <View style={styles.formSection}>
           {editorFields.map((field) => (
@@ -230,7 +267,18 @@ export default function ExperimentEditorScreen() {
               multiline={field.multiline}
               onChangeText={(value) => {
                 setForm((current) => (current ? { ...current, [field.key]: value } : current));
-                setErrors((current) => ({ ...current, [field.key]: undefined }));
+                setErrors((current) => {
+                  if (field.key === 'title' && !value.trim()) {
+                    return { ...current, title: 'Give this experiment a name.' };
+                  }
+                  if (field.key === 'hypothesis' && !value.trim()) {
+                    return {
+                      ...current,
+                      hypothesis: 'Keep the question you are testing visible here.',
+                    };
+                  }
+                  return { ...current, [field.key]: undefined };
+                });
               }}
               placeholder={field.placeholder}
               value={form[field.key]}
@@ -310,19 +358,6 @@ export default function ExperimentEditorScreen() {
             </View>
           ) : null}
         </SurfaceCard>
-
-        <AppButton
-          disabled={isSaving}
-          label={isSaving ? 'Saving...' : 'Save changes'}
-          onPress={() => {
-            void handleSave();
-          }}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 999,
-            opacity: isSaving ? 0.7 : 1,
-          }}
-        />
       </KeyboardAwareScrollView>
     </>
   );
@@ -359,5 +394,11 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
+  },
+  statusToggle: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    minHeight: 40,
   },
 });

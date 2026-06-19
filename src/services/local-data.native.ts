@@ -2,8 +2,9 @@ import * as SQLite from 'expo-sqlite';
 
 import {
   seedExperiments,
-  type ExperimentDraftInput,
+  type ExperimentInput,
   type ExperimentRecord,
+  type ExperimentStatus,
 } from '../features/experiments/experiment-models';
 
 const dbPromise = SQLite.openDatabaseAsync('experiment-tracker.db');
@@ -72,7 +73,7 @@ function normalizeRecord(record: {
     notes: record.notes,
     plannedAttachmentCount: record.planned_attachment_count,
     photoAssets: JSON.parse(record.photo_assets || '[]') as ExperimentRecord['photoAssets'],
-    status: record.status,
+    status: record.status === 'complete' ? 'complete' : 'active',
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
@@ -120,6 +121,8 @@ export async function ensureLocalDataReady(): Promise<void> {
     } catch {
       // Older installs may already have this column, so the migration can noop safely.
     }
+
+    await db.runAsync(`UPDATE experiments SET status = 'active' WHERE status = 'draft'`);
 
     const bootstrapRow = await db.getFirstAsync<{ value: string }>(
       'SELECT value FROM app_state WHERE key = ?',
@@ -245,9 +248,7 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
   }
 }
 
-export async function createExperimentDraft(
-  input: ExperimentDraftInput
-): Promise<ExperimentRecord> {
+export async function createExperiment(input: ExperimentInput): Promise<ExperimentRecord> {
   await ensureLocalDataReady();
   const db = await getDb();
   const timestamp = new Date().toISOString();
@@ -262,7 +263,7 @@ export async function createExperimentDraft(
     notes: input.notes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
-    status: input.resultsNotes.trim() ? 'active' : 'draft',
+    status: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -360,7 +361,7 @@ export async function resetExperiments(): Promise<void> {
 
 export async function updateExperiment(
   id: string,
-  input: ExperimentDraftInput
+  input: ExperimentInput
 ): Promise<ExperimentRecord | null> {
   await ensureLocalDataReady();
   const current = await getExperimentById(id);
@@ -381,7 +382,7 @@ export async function updateExperiment(
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     updatedAt: new Date().toISOString(),
-    status: input.resultsNotes.trim() ? 'active' : current.status,
+    status: current.status === 'complete' ? 'complete' : 'active',
   };
 
   const db = await getDb();
@@ -409,6 +410,54 @@ export async function updateExperiment(
       updated.notes,
       updated.plannedAttachmentCount,
       JSON.stringify(updated.photoAssets),
+      updated.status,
+      updated.updatedAt,
+      id
+    );
+
+    return updated;
+  } catch {
+    sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = memoryExperiments.map((experiment) =>
+      experiment.id === id ? updated : experiment
+    );
+    return updated;
+  }
+}
+
+export async function updateExperimentStatus(
+  id: string,
+  status: ExperimentStatus
+): Promise<ExperimentRecord | null> {
+  await ensureLocalDataReady();
+  const current = await getExperimentById(id);
+
+  if (!current) {
+    return null;
+  }
+
+  const updated: ExperimentRecord = {
+    ...current,
+    status,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const db = await getDb();
+
+  if (!db) {
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = memoryExperiments.map((experiment) =>
+      experiment.id === id ? updated : experiment
+    );
+    return updated;
+  }
+
+  try {
+    await db.runAsync(
+      `UPDATE experiments
+       SET status = ?, updated_at = ?
+       WHERE id = ?`,
       updated.status,
       updated.updatedAt,
       id

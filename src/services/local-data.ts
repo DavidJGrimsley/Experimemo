@@ -1,7 +1,8 @@
 import {
   seedExperiments,
-  type ExperimentDraftInput,
+  type ExperimentInput,
   type ExperimentRecord,
+  type ExperimentStatus,
 } from '../features/experiments/experiment-models';
 
 let experiments: ExperimentRecord[] = [];
@@ -26,9 +27,7 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
   return experiments.find((experiment) => experiment.id === id) ?? null;
 }
 
-export async function createExperimentDraft(
-  input: ExperimentDraftInput
-): Promise<ExperimentRecord> {
+export async function createExperiment(input: ExperimentInput): Promise<ExperimentRecord> {
   await ensureLocalDataReady();
   const timestamp = new Date().toISOString();
   const experiment: ExperimentRecord = {
@@ -42,7 +41,7 @@ export async function createExperimentDraft(
     notes: input.notes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
-    status: input.resultsNotes.trim() ? 'active' : 'draft',
+    status: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -69,7 +68,7 @@ export async function resetExperiments(): Promise<void> {
 
 export async function updateExperiment(
   id: string,
-  input: ExperimentDraftInput
+  input: ExperimentInput
 ): Promise<ExperimentRecord | null> {
   await ensureLocalDataReady();
   const existing = experiments.find((experiment) => experiment.id === id);
@@ -90,7 +89,28 @@ export async function updateExperiment(
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     updatedAt: new Date().toISOString(),
-    status: input.resultsNotes.trim() ? 'active' : existing.status,
+    status: existing.status === 'complete' ? 'complete' : 'active',
+  };
+
+  experiments = experiments.map((experiment) => (experiment.id === id ? updated : experiment));
+  return updated;
+}
+
+export async function updateExperimentStatus(
+  id: string,
+  status: ExperimentStatus
+): Promise<ExperimentRecord | null> {
+  await ensureLocalDataReady();
+  const existing = experiments.find((experiment) => experiment.id === id);
+
+  if (!existing) {
+    return null;
+  }
+
+  const updated: ExperimentRecord = {
+    ...existing,
+    status,
+    updatedAt: new Date().toISOString(),
   };
 
   experiments = experiments.map((experiment) => (experiment.id === id ? updated : experiment));

@@ -70,7 +70,7 @@
 ## Release Validation Checklist
 
 - Create a new experiment and confirm required-field validation is clear.
-- Save a draft experiment and confirm it appears immediately in `Track`.
+- Save an experiment and confirm it appears immediately in `Track`.
 - Reopen an experiment and edit results, notes, and planned photo count.
 - Add photos from the media library, relaunch the app, and confirm the record
   still shows attached photos.

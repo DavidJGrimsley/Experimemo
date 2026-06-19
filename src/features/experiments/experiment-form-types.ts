@@ -1,4 +1,4 @@
-import type { ExperimentDraftInput, ExperimentPhotoAsset } from './experiment-store';
+import type { ExperimentInput, ExperimentPhotoAsset } from './experiment-store';
 
 export interface ExperimentFormState {
   title: string;
@@ -24,7 +24,7 @@ export const initialExperimentFormState: ExperimentFormState = {
   photoAssets: [],
 };
 
-export function toExperimentDraftInput(form: ExperimentFormState): ExperimentDraftInput {
+export function toExperimentInput(form: ExperimentFormState): ExperimentInput {
   const parsedCount = Number.parseInt(form.plannedAttachmentCount, 10);
 
   return {
@@ -40,7 +40,7 @@ export function toExperimentDraftInput(form: ExperimentFormState): ExperimentDra
   };
 }
 
-export function fromExperimentDraftInput(input: ExperimentDraftInput): ExperimentFormState {
+export function fromExperimentInput(input: ExperimentInput): ExperimentFormState {
   return {
     title: input.title,
     category: input.category,

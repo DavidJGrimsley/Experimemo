@@ -1,4 +1,4 @@
-export type ExperimentStatus = 'draft' | 'active' | 'complete';
+export type ExperimentStatus = 'active' | 'complete';
 
 export interface ExperimentPhotoAsset {
   id: string;
@@ -25,7 +25,7 @@ export interface ExperimentRecord {
   updatedAt: string;
 }
 
-export interface ExperimentDraftInput {
+export interface ExperimentInput {
   title: string;
   category: string;
   hypothesis: string;
@@ -68,7 +68,7 @@ export const seedExperiments: ExperimentRecord[] = [
     notes: 'Bring insulated gloves and set up tripod before running measurements.',
     plannedAttachmentCount: 0,
     photoAssets: [],
-    status: 'draft',
+    status: 'active',
     createdAt: '2026-06-15T13:00:00.000Z',
     updatedAt: '2026-06-15T13:00:00.000Z',
   },

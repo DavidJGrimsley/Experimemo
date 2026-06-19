@@ -15,6 +15,7 @@
 - Canonical editable tokens live in `project/theme.json`.
 - Run `mds stylist sync .` if theme tokens change and this file needs to be refreshed.
 - Keep the current green primary as the "record progress / continue" color.
+- Use a burnt orange secondary for completed states and secondary actions.
 - Use neutral slate backgrounds and surfaces so captured photos, notes, and measurements remain the focus.
 - Dark mode should stay functional and low-glare, not neon or high-saturation.
 
@@ -62,13 +63,13 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
   "families": {
     "light": {
       "primary": "blue",
-      "secondary": "violet",
+      "secondary": "orange",
       "success": "emerald",
       "warning": "amber"
     },
     "dark": {
       "primary": "blue",
-      "secondary": "violet",
+      "secondary": "orange",
       "success": "emerald",
       "warning": "amber"
     }
@@ -80,7 +81,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
         "surface": "#e2e8f0",
         "text": "#111827",
         "primary": "#299a0f",
-        "secondary": "#7c3aed",
+        "secondary": "#b85d13",
         "success": "#16a34a",
         "warning": "#f97316"
       },
@@ -89,7 +90,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
         "surface": "#18181b",
         "text": "#f8fafc",
         "primary": "#299a0f",
-        "secondary": "#a78bfa",
+        "secondary": "#d48a45",
         "success": "#4ade80",
         "warning": "#fb923c"
       }
@@ -100,7 +101,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
         "surface": "#e7f0fe",
         "text": "#132a4f",
         "primary": "#3b82f6",
-        "secondary": "#8b5cf6",
+        "secondary": "#b85d13",
         "success": "#10b981",
         "warning": "#f59e0b"
       },
@@ -109,7 +110,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
         "surface": "#1f3550",
         "text": "#d6e8fe",
         "primary": "#60a5fa",
-        "secondary": "#a78bfa",
+        "secondary": "#d48a45",
         "success": "#34d399",
         "warning": "#fbbf24"
       }
@@ -121,7 +122,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
       "surface": "#e2e8f0",
       "text": "#111827",
       "primary": "#299a0f",
-      "secondary": "#7c3aed",
+      "secondary": "#b85d13",
       "success": "#16a34a",
       "warning": "#f97316"
     },
@@ -130,7 +131,7 @@ The block below mirrors `project/theme.json` and is managed by `mds stylist sync
       "surface": "#18181b",
       "text": "#f8fafc",
       "primary": "#299a0f",
-      "secondary": "#a78bfa",
+      "secondary": "#d48a45",
       "success": "#4ade80",
       "warning": "#fb923c"
     }
