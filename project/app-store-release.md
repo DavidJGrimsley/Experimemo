@@ -39,8 +39,9 @@
   - subtitle: `Track experiments on the go`
   - promotional description: `Create experiment records, capture notes, attach photos, and update results from your phone without slowing down your lab workflow.`
   - keyword set: `science,experiment,lab,notes,research,data,tracker,student`
-- Support URL: intentionally omitted for now
-- Privacy policy URL: intentionally omitted for now
+- Support URL: `https://davidjgrimsley.com/experimemo/support`
+- Privacy policy URL: `https://davidjgrimsley.com/experimemo/privacy`
+- Terms of service URL: `https://davidjgrimsley.com/experimemo/terms`
 - Capture final screenshots after the UI copy and iconography are locked
 
 ## Review Notes For App Review
@@ -59,8 +60,9 @@
 
 - The `Settings` screen is intentionally lightweight and should only ship if its
   copy remains product-ready.
-- Legal onboarding routes still exist in the app shell. If they are not part of
-  the intended public MVP, remove or hide them before submission.
+- Legal onboarding now points to the live hosted privacy policy and terms of
+  service instead of placeholder in-app documents. Keep those hosted pages live
+  and aligned with the shipping app behavior.
 - App Store Connect credentials and the first successful TestFlight upload still
   need to be completed before `test` branch automation can succeed.
 - Local-only photo URI storage is acceptable for MVP review, but it should be

@@ -1,10 +1,21 @@
 import { router, Stack } from 'expo-router';
 import { startTransition, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  Alert,
+  Linking,
+  Pressable,
+  type PressableProps,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 
 import { AppButton } from '@/components/app-button';
 import { AppText } from '@/components/app-text';
+import { ExternalLink } from '@/components/external-link';
 import { SurfaceCard } from '@/components/surface-card';
+import { APP_LINKS } from '@/config/app-links';
 import { useAppTheme } from '@/theme/provider';
 
 import {
@@ -31,18 +42,20 @@ function SettingsRow({
   actionLabel,
   actionColor,
   onPress,
+  ...pressableProps
 }: {
   title: string;
   body: string;
   actionLabel?: string;
   actionColor?: string;
   onPress?: () => void;
-}) {
+} & PressableProps) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
 
   return (
     <Pressable
+      {...pressableProps}
       accessibilityRole={onPress ? 'button' : undefined}
       onPress={onPress}
       style={styles.row}>
@@ -257,6 +270,13 @@ export default function AppInfoModalScreen() {
             body="Experimemo helps you capture experiment setup, observations, notes, and photos without slowing the work down."
             title="About experimemo"
           />
+          <ExternalLink asChild href={APP_LINKS.support}>
+            <SettingsRow
+              actionLabel="Open"
+              body="Visit the support page for release notes, contact details, and help."
+              title="Support"
+            />
+          </ExternalLink>
           <SettingsRow
             body="Built by David Grimsley for fast experiment tracking in the lab, classroom, or field."
             title="Developer"
@@ -286,17 +306,31 @@ export default function AppInfoModalScreen() {
             FEEDBACK
           </AppText>
           <SettingsRow
+            body="Share feedback by opening a GitHub issue with what you tried, what happened, and what you expected."
+            title="How to send feedback"
+          />
+          <SettingsRow
             actionLabel="Open"
-            body="Open the GitHub repository for updates, issues, and ideas."
+            body="Open the GitHub repository for updates, issues, ideas, and feature requests."
             onPress={() => {
               void Linking.openURL(repoUrl);
             }}
             title="GitHub repository"
           />
-          <SettingsRow
-            body="Share feedback by opening a GitHub issue with what you tried, what happened, and what you expected."
-            title="How to send feedback"
-          />
+          <ExternalLink asChild href={APP_LINKS.terms}>
+            <SettingsRow
+              actionLabel="Open"
+              body="Read the current terms that apply when using experimemo."
+              title="Terms of service"
+            />
+          </ExternalLink>
+          <ExternalLink asChild href={APP_LINKS.privacy}>
+            <SettingsRow
+              actionLabel="Open"
+              body="Review how experimemo handles data and privacy."
+              title="Privacy policy"
+            />
+          </ExternalLink>
         </SurfaceCard>
 
         {showDeletePicker ? (
