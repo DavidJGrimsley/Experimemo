@@ -88,8 +88,6 @@ function LayoutInner() {
                 options={{ headerBackButtonDisplayMode: 'minimal', title: '' }}
               />
               <Stack.Screen name="onboarding" options={{ title: 'Onboarding' }} />
-              <Stack.Screen name="onboarding/agreement" options={{ title: 'Agreement' }} />
-              <Stack.Screen name="onboarding/terms" options={{ title: 'Terms Of Service' }} />
               <Stack.Screen name="onboarding/account-setup" options={{ title: 'Account Setup' }} />
               <Stack.Screen
                 name="modal"

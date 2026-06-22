@@ -1,29 +1,21 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
 import { AppText } from '@/components/app-text';
+import { openExternalLink } from '@/components/external-link';
 import { SurfaceCard } from '@/components/surface-card';
+import { APP_LINKS } from '@/config/app-links';
 import { useAppTheme } from '@/theme/provider';
-
-import { onboardingLegalDocuments } from './legal-documents';
 
 export default function OnboardingScreen() {
   const theme = useAppTheme();
   const colors = theme.activeColors;
-  const [acceptedAgreement, setAcceptedAgreement] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const router = useRouter();
-  const canContinue = acceptedAgreement && acceptedTerms;
-  const agreementUpdated = useMemo(
-    () => new Date(onboardingLegalDocuments.agreement.lastUpdated).toLocaleDateString(),
-    []
-  );
-  const termsUpdated = useMemo(
-    () => new Date(onboardingLegalDocuments.terms.lastUpdated).toLocaleDateString(),
-    []
-  );
+  const canContinue = acceptedPrivacy && acceptedTerms;
 
   return (
     <ScrollView
@@ -47,7 +39,7 @@ export default function OnboardingScreen() {
             fontSize: 15,
             lineHeight: 22,
           }}>
-          Review the agreement and terms, then continue into the app once both are accepted.
+          Review the privacy policy and terms of service, then continue once both are accepted.
         </AppText>
       </View>
 
@@ -60,16 +52,7 @@ export default function OnboardingScreen() {
               fontSize: 18,
               fontWeight: '800',
             }}>
-            Agreement
-          </AppText>
-          <AppText
-            style={{
-              color: colors.text,
-              fontFamily: theme.typography.fontBody,
-              fontSize: 12,
-              fontWeight: '700',
-            }}>
-            {agreementUpdated}
+            Privacy policy
           </AppText>
         </View>
         <AppText
@@ -79,12 +62,14 @@ export default function OnboardingScreen() {
             fontSize: 14,
             lineHeight: 20,
           }}>
-          Read the agreement so you know how your use of the app is framed.
+          Read how experimemo handles local experiment data, attached photos, and support requests.
         </AppText>
         <View style={styles.cardBottomRow}>
           <AppButton
-            label="Read agreement"
-            onPress={() => router.push('/onboarding/agreement')}
+            label="Open policy"
+            onPress={() => {
+              void openExternalLink(APP_LINKS.privacy);
+            }}
             style={{
               backgroundColor: colors.background,
               borderColor: colors.primary,
@@ -103,7 +88,7 @@ export default function OnboardingScreen() {
               }}>
               Accepted
             </AppText>
-            <Switch onValueChange={setAcceptedAgreement} value={acceptedAgreement} />
+            <Switch onValueChange={setAcceptedPrivacy} value={acceptedPrivacy} />
           </View>
         </View>
       </SurfaceCard>
@@ -119,15 +104,6 @@ export default function OnboardingScreen() {
             }}>
             Terms of service
           </AppText>
-          <AppText
-            style={{
-              color: colors.text,
-              fontFamily: theme.typography.fontBody,
-              fontSize: 12,
-              fontWeight: '700',
-            }}>
-            {termsUpdated}
-          </AppText>
         </View>
         <AppText
           style={{
@@ -136,12 +112,14 @@ export default function OnboardingScreen() {
             fontSize: 14,
             lineHeight: 20,
           }}>
-          Review the service terms before you start saving experiment data.
+          Review the live terms before you start saving and updating experiment records.
         </AppText>
         <View style={styles.cardBottomRow}>
           <AppButton
-            label="Read terms"
-            onPress={() => router.push('/onboarding/terms')}
+            label="Open terms"
+            onPress={() => {
+              void openExternalLink(APP_LINKS.terms);
+            }}
             style={{
               backgroundColor: colors.background,
               borderColor: colors.primary,
