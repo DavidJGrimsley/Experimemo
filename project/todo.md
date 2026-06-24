@@ -55,7 +55,7 @@
 - [x] Add the ability to take pictures from the add photo button instead of just uploading from the library like most apps do.
 - [x] Fix issue where the view border colors are sometimes orange instead of green. 
 - [x] Update the app to use the urls of: https://davidjgrimsley.com/experimemo/support, https://davidjgrimsley.com/experimemo/terms, and https://davidjgrimsley.com/experimemo/privacy for the support URL, terms of service URL, and privacy policy URL respectively. 
-- [ ] The preloaded example experiments aren't in the delete list. Add them to the db so they can be deleted by the user without resetting the app and possibly their data which is currently the only way to do so. Also add '(Example)' to the title of the preloaded experiments so the user can easily identify them as examples. 
+- [x] The preloaded example experiments aren't in the delete list. Add them to the db so they can be deleted by the user without resetting the app and possibly their data which is currently the only way to do so. Also add '(Example)' to the title of the preloaded experiments so the user can easily identify them as examples. 
 
 ## Future Considerations (post-MVP)
 - [ ] Add a 'control' field to the experiments and possibly a toggle for 'the scientific method' which will add the control field and possibly change the layout of the create and experiment pages to reflect the different flow of the scientific method. This is a common framework for conducting experiments and it would be helpful to have it built into the app for users who want to follow that structure. The current flow is more of a simple experiment/observation tracker which is fine. 

@@ -51,7 +51,7 @@ export interface ExperimentInput {
 export const seedExperiments: ExperimentRecord[] = [
   {
     id: 'experiment-seed-1',
-    title: 'Bean sprouts under different light conditions',
+    title: 'Bean sprouts under different light conditions (Example)',
     category: 'Botany',
     hypothesis:
       'Bean sprouts exposed to indirect daylight will grow taller than sprouts kept under a desk lamp for the same duration.',
@@ -79,7 +79,7 @@ export const seedExperiments: ExperimentRecord[] = [
   },
   {
     id: 'experiment-seed-2',
-    title: 'Cooling rate of metal versus glass containers',
+    title: 'Cooling rate of metal versus glass containers (Example)',
     category: 'Physics',
     hypothesis:
       'Water stored in a metal container will lose heat faster than water stored in a glass container of the same size.',
