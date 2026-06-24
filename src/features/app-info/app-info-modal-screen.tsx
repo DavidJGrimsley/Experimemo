@@ -1,15 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
-import { startTransition, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Linking,
-  Pressable,
-  type PressableProps,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  View,
-} from 'react-native';
+import { startTransition, useEffect, useState } from 'react';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
 import { AppText } from '@/components/app-text';
@@ -42,20 +34,18 @@ function SettingsRow({
   actionLabel,
   actionColor,
   onPress,
-  ...pressableProps
 }: {
   title: string;
   body: string;
   actionLabel?: string;
   actionColor?: string;
   onPress?: () => void;
-} & PressableProps) {
+}) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
 
   return (
     <Pressable
-      {...pressableProps}
       accessibilityRole={onPress ? 'button' : undefined}
       onPress={onPress}
       style={styles.row}>
@@ -98,11 +88,9 @@ export default function AppInfoModalScreen() {
   const theme = useAppTheme();
   const colors = theme.activeColors;
   const [experiments, setExperiments] = useState<ExperimentRecord[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showDeletePicker, setShowDeletePicker] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
-  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   async function loadExperiments() {
     const result = await listExperiments();
@@ -129,54 +117,28 @@ export default function AppInfoModalScreen() {
     };
   }, []);
 
-  function toggleSelected(id: string, value?: boolean) {
-    setSelectedIds((current) => {
-      const shouldSelect = value ?? !current.includes(id);
-      if (shouldSelect) {
-        return current.includes(id) ? current : [...current, id];
-      }
-      return current.filter((currentId) => currentId !== id);
-    });
-  }
-
-  async function runDeleteSelected() {
-    if (selectedIds.length === 0) {
-      return;
-    }
-
-    setIsDeleting(true);
+  async function runDeleteExperiment(id: string) {
+    setDeletingId(id);
 
     try {
-      await deleteExperiments(selectedIds);
-      setSelectedIds([]);
+      await deleteExperiments([id]);
       await loadExperiments();
-      router.dismissTo('/track');
     } finally {
-      setIsDeleting(false);
+      setDeletingId((current) => (current === id ? null : current));
     }
   }
 
-  function handleDeleteSelected() {
-    if (selectedIds.length === 0) {
-      return;
-    }
-
-    Alert.alert(
-      'Delete selected experiments?',
-      `This will permanently remove ${selectedIds.length} experiment${
-        selectedIds.length === 1 ? '' : 's'
-      }.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          style: 'destructive',
-          text: 'Delete',
-          onPress: () => {
-            void runDeleteSelected();
-          },
+  function handleDeleteExperiment(experiment: ExperimentRecord) {
+    Alert.alert('Delete experiment?', `This will permanently remove "${experiment.title}".`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        style: 'destructive',
+        text: 'Delete',
+        onPress: () => {
+          void runDeleteExperiment(experiment.id);
         },
-      ]
-    );
+      },
+    ]);
   }
 
   function handleResetApp() {
@@ -193,7 +155,7 @@ export default function AppInfoModalScreen() {
               setIsResetting(true);
               try {
                 await resetExperiments();
-                setSelectedIds([]);
+                setShowDeleteModal(false);
                 await loadExperiments();
                 router.dismissTo('/track');
               } finally {
@@ -204,6 +166,14 @@ export default function AppInfoModalScreen() {
         },
       ]
     );
+  }
+
+  function handleOpenDeleteModal() {
+    if (!showDeleteModal) {
+      void loadExperiments();
+    }
+
+    setShowDeleteModal(true);
   }
 
   return (
@@ -236,24 +206,35 @@ export default function AppInfoModalScreen() {
             }}>
             SETTINGS
           </AppText>
-          <SettingsRow
-            actionLabel={showDeletePicker ? 'Hide' : 'Open'}
-            body="Choose experiments to remove from the app."
-            onPress={() => {
-              setShowDeletePicker((current) => !current);
-              if (!showDeletePicker) {
-                void loadExperiments();
-              }
-            }}
-            title="Delete experiments"
-          />
-          <SettingsRow
-            actionColor={isResetting ? colors.warning : colors.primary}
-            actionLabel={isResetting ? 'Working...' : 'Reset'}
-            body="Clear every saved experiment and start fresh."
-            onPress={handleResetApp}
-            title="Reset app"
-          />
+          <View style={styles.settingsActions}>
+            <AppButton
+              label="Delete experiments"
+              onPress={handleOpenDeleteModal}
+              style={{
+                alignSelf: 'stretch',
+                borderRadius: 14,
+                borderColor: '#dc2626',
+                borderWidth: 1,
+                minHeight: 52,
+              }}
+              textStyle={{ color: colors.text }}
+              variant="outlined"
+            />
+            <AppButton
+              label={isResetting ? 'Resetting...' : 'Reset app'}
+              onPress={handleResetApp}
+              style={{
+                alignSelf: 'stretch',
+                borderRadius: 14,
+                borderColor: colors.secondary,
+                borderWidth: 1,
+                minHeight: 52,
+                opacity: isResetting ? 0.75 : 1,
+              }}
+              textStyle={{ color: colors.text }}
+              variant="outlined"
+            />
+          </View>
         </SurfaceCard>
 
         <SurfaceCard>
@@ -332,18 +313,50 @@ export default function AppInfoModalScreen() {
             />
           </ExternalLink>
         </SurfaceCard>
+      </ScrollView>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => {
+          setShowDeleteModal(false);
+        }}
+        transparent
+        visible={showDeleteModal}>
+        <View style={styles.modalBackdrop}>
+          <View
+            style={[
+              styles.modalCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.primary,
+              },
+            ]}>
+            <View style={styles.modalHeader}>
+              <AppText
+                style={{
+                  color: colors.text,
+                  fontFamily: theme.typography.fontBody,
+                  fontSize: 20,
+                  fontWeight: '800',
+                }}>
+                Delete experiments
+              </AppText>
+              <Pressable
+                accessibilityLabel="Close delete experiments"
+                accessibilityRole="button"
+                onPress={() => {
+                  setShowDeleteModal(false);
+                }}
+                style={[
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.primary,
+                  },
+                ]}>
+                <Ionicons color={colors.text} name="close" size={20} />
+              </Pressable>
+            </View>
 
-        {showDeletePicker ? (
-          <SurfaceCard>
-            <AppText
-              style={{
-                color: colors.text,
-                fontFamily: theme.typography.fontBody,
-                fontSize: 17,
-                fontWeight: '800',
-              }}>
-              Select experiments to delete
-            </AppText>
             {experiments.length === 0 ? (
               <AppText
                 style={{
@@ -355,96 +368,126 @@ export default function AppInfoModalScreen() {
                 There are no saved experiments to remove.
               </AppText>
             ) : (
-              <View style={styles.selectionList}>
-                {experiments.map((experiment) => (
-                  <Pressable
-                    key={experiment.id}
-                    onPress={() => toggleSelected(experiment.id)}
-                    style={[
-                      styles.selectionRow,
-                      {
-                        backgroundColor: colors.background,
-                        borderColor: colors.primary,
-                      },
-                    ]}>
-                    <View style={styles.rowText}>
-                      <AppText
-                        style={{
-                          color: colors.text,
-                          fontFamily: theme.typography.fontBody,
-                          fontSize: 15,
-                          fontWeight: '700',
-                        }}>
-                        {experiment.title}
-                      </AppText>
-                      <AppText
-                        style={{
-                          color: colors.text,
-                          fontFamily: theme.typography.fontBody,
-                          fontSize: 13,
-                          lineHeight: 18,
-                        }}>
-                        {`${experiment.category} - Updated ${formatDate(experiment.updatedAt)}`}
-                      </AppText>
+              <ScrollView
+                contentContainerStyle={styles.modalList}
+                showsVerticalScrollIndicator={false}>
+                {experiments.map((experiment) => {
+                  const isDeletingRow = deletingId === experiment.id;
+
+                  return (
+                    <View
+                      key={experiment.id}
+                      style={[
+                        styles.selectionRow,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: colors.primary,
+                        },
+                      ]}>
+                      <View style={styles.rowText}>
+                        <AppText
+                          style={{
+                            color: colors.text,
+                            fontFamily: theme.typography.fontBody,
+                            fontSize: 15,
+                            fontWeight: '700',
+                          }}>
+                          {experiment.title}
+                        </AppText>
+                        <AppText
+                          style={{
+                            color: colors.text,
+                            fontFamily: theme.typography.fontBody,
+                            fontSize: 13,
+                            lineHeight: 18,
+                          }}>
+                          {`${experiment.category} - Updated ${formatDate(experiment.updatedAt)}`}
+                        </AppText>
+                      </View>
+                      <Pressable
+                        accessibilityLabel={`Delete ${experiment.title}`}
+                        accessibilityRole="button"
+                        disabled={isDeletingRow}
+                        onPress={() => handleDeleteExperiment(experiment)}
+                        style={[
+                          styles.deleteIconButton,
+                          {
+                            opacity: isDeletingRow ? 0.6 : 1,
+                          },
+                        ]}>
+                        <Ionicons color="#ffffff" name="close" size={18} />
+                      </Pressable>
                     </View>
-                    <Switch
-                      onValueChange={(value) => toggleSelected(experiment.id, value)}
-                      value={selectedIdSet.has(experiment.id)}
-                    />
-                  </Pressable>
-                ))}
-              </View>
+                  );
+                })}
+              </ScrollView>
             )}
 
-            {experiments.length > 0 ? (
-              <View style={styles.actions}>
-                <AppButton
-                  disabled={selectedIds.length === 0 || isDeleting}
-                  label={
-                    isDeleting
-                      ? 'Deleting...'
-                      : selectedIds.length === 0
-                        ? 'Select experiments first'
-                        : `Delete ${selectedIds.length} selected`
-                  }
-                  onPress={handleDeleteSelected}
-                  style={{
-                    backgroundColor: colors.warning,
-                    borderRadius: 999,
-                    opacity: selectedIds.length === 0 || isDeleting ? 0.7 : 1,
-                  }}
-                />
-                <AppButton
-                  label="Cancel"
-                  onPress={() => {
-                    setSelectedIds([]);
-                    setShowDeletePicker(false);
-                  }}
-                  style={{
-                    backgroundColor: colors.background,
-                    borderColor: colors.primary,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                  }}
-                  variant="outlined"
-                />
-              </View>
-            ) : null}
-          </SurfaceCard>
-        ) : null}
-      </ScrollView>
+            <AppButton
+              label="Done"
+              onPress={() => {
+                setShowDeleteModal(false);
+              }}
+              style={{
+                alignSelf: 'stretch',
+                backgroundColor: colors.background,
+                borderColor: colors.primary,
+                borderRadius: 14,
+                borderWidth: 1,
+              }}
+              variant="outlined"
+            />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: {
-    gap: 10,
-  },
   content: {
     gap: 20,
     padding: 20,
     paddingBottom: 28,
+  },
+  deleteIconButton: {
+    alignItems: 'center',
+    backgroundColor: '#dc2626',
+    borderRadius: 999,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  closeButton: {
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  modalBackdrop: {
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 16,
+    maxHeight: '78%',
+    padding: 18,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  modalList: {
+    gap: 12,
+    paddingBottom: 8,
   },
   row: {
     alignItems: 'center',
@@ -459,8 +502,8 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  selectionList: {
-    gap: 10,
+  settingsActions: {
+    gap: 12,
   },
   selectionRow: {
     alignItems: 'center',
