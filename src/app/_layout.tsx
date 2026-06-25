@@ -96,7 +96,7 @@ function LayoutInner() {
                   headerLargeTitleEnabled: false,
                   headerShown: Platform.OS !== 'web',
                   headerTitleAlign: 'left',
-                  presentation: 'card',
+                  presentation: 'modal',
                   title: 'App info',
                 }}
               />

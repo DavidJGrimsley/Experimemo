@@ -48,4 +48,4 @@ jobs:
         run: npm run ci:verify --if-present
 
       - name: Build and auto-submit to TestFlight
-        run: npx eas-cli@latest build --platform ios --profile testflight --auto-submit --non-interactive --wait --message "test ${GITHUB_SHA}"
+        run: eas build --platform ios --profile testflight --auto-submit --non-interactive --wait --message "test ${GITHUB_SHA}"
