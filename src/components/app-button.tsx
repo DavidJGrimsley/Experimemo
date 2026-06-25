@@ -8,6 +8,7 @@ import { AppText } from './app-text';
 interface AppButtonProps {
   label: string;
   onPress: () => void;
+  accessibilityLabel?: string;
   disabled?: boolean;
   variant?: 'filled' | 'outlined';
   style?: StyleProp<ViewStyle>;
@@ -17,6 +18,7 @@ interface AppButtonProps {
 export function AppButton({
   label,
   onPress,
+  accessibilityLabel,
   disabled = false,
   variant = 'filled',
   style,
@@ -51,7 +53,9 @@ export function AppButton({
 
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={pressableStyle}>
