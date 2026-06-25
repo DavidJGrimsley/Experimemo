@@ -67,16 +67,39 @@ function LayoutInner() {
             <Stack
               screenOptions={{
                 contentStyle: { backgroundColor: shellColor },
+                headerLargeTitleEnabled: false,
                 headerShown: Platform.OS !== 'web',
+                headerStyle: { backgroundColor: shellColor },
+                headerTitleStyle: {
+                  fontSize: 18,
+                  fontWeight: '700',
+                },
+                ...(Platform.OS === 'android'
+                  ? {
+                      statusBarBackgroundColor: shellColor,
+                      statusBarTranslucent: false,
+                    }
+                  : {}),
               }}>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="experiment/[id]" options={{ title: 'Experiment' }} />
+              <Stack.Screen
+                name="experiment/[id]"
+                options={{ headerBackButtonDisplayMode: 'minimal', title: '' }}
+              />
               <Stack.Screen name="onboarding" options={{ title: 'Onboarding' }} />
-              <Stack.Screen name="onboarding/agreement" options={{ title: 'Agreement' }} />
-              <Stack.Screen name="onboarding/terms" options={{ title: 'Terms Of Service' }} />
               <Stack.Screen name="onboarding/account-setup" options={{ title: 'Account Setup' }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+              <Stack.Screen
+                name="modal"
+                options={{
+                  headerBackButtonDisplayMode: 'minimal',
+                  headerLargeTitleEnabled: false,
+                  headerShown: Platform.OS !== 'web',
+                  headerTitleAlign: 'left',
+                  presentation: 'modal',
+                  title: 'App info',
+                }}
+              />
             </Stack>
           </RouterThemeBridge>
         </SafeAreaProvider>

@@ -1,0 +1,51 @@
+name: EAS Production Builds
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: eas-production-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build_production_artifacts:
+    name: Build production artifacts on EAS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "Missing EXPO_TOKEN GitHub secret."
+            echo "Create one from https://expo.dev/settings/access-tokens and add it in this repo's Actions secrets."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify project
+        run: npm run ci:verify --if-present
+
+      - name: Build iOS and Android production artifacts
+        run: eas build --platform all --profile production --non-interactive --wait --message "main ${GITHUB_SHA}"

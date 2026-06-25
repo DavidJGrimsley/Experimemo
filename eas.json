@@ -1,0 +1,31 @@
+{
+  "cli": {
+    "version": ">= 20.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "testflight": {
+      "extends": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6781789138"
+      },
+      "android": {}
+    },
+    "testflight": {
+      "ios": {
+        "ascAppId": "6781789138"
+      }
+    }
+  }
+}

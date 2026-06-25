@@ -1,167 +1,192 @@
-import { Link, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { onboardingLegalDocuments } from './legal-documents';
+import { AppButton } from '@/components/app-button';
+import { AppText } from '@/components/app-text';
+import { openExternalLink } from '@/components/external-link';
+import { SurfaceCard } from '@/components/surface-card';
+import { APP_LINKS } from '@/config/app-links';
+import { useAppTheme } from '@/theme/provider';
 
 export default function OnboardingScreen() {
-  const [acceptedAgreement, setAcceptedAgreement] = useState(false);
+  const theme = useAppTheme();
+  const colors = theme.activeColors;
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const router = useRouter();
-  const canContinue = acceptedAgreement && acceptedTerms;
-  const agreementUpdated = useMemo(
-    () => new Date(onboardingLegalDocuments.agreement.lastUpdated).toLocaleDateString(),
-    []
-  );
-  const termsUpdated = useMemo(
-    () => new Date(onboardingLegalDocuments.terms.lastUpdated).toLocaleDateString(),
-    []
-  );
+  const canContinue = acceptedPrivacy && acceptedTerms;
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Legal onboarding</Text>
-      <Text style={styles.body}>
-        Review and approve the Agreement and Terms before continuing in your real auth or profile
-        flow.
-      </Text>
-      <View style={styles.card}>
-        <View style={styles.rowTop}>
-          <Text style={styles.cardTitle}>Agreement</Text>
-          <Text style={styles.meta}>{agreementUpdated}</Text>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.content}
+      style={[styles.screen, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontFamily,
+            fontSize: 26,
+            fontWeight: '800',
+          }}>
+          Before you begin
+        </AppText>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 15,
+            lineHeight: 22,
+          }}>
+          Review the privacy policy and terms of service, then continue once both are accepted.
+        </AppText>
+      </View>
+
+      <SurfaceCard>
+        <View style={styles.cardTopRow}>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 18,
+              fontWeight: '800',
+            }}>
+            Privacy policy
+          </AppText>
         </View>
-        <Text style={styles.cardBody}>
-          A compact starter agreement with fill-in fields your team can finalize.
-        </Text>
-        <View style={styles.rowBottom}>
-          <Link href="/onboarding/agreement" asChild>
-            <Pressable accessibilityRole="button" style={styles.linkButton}>
-              <Text style={styles.linkButtonText}>View agreement</Text>
-            </Pressable>
-          </Link>
-          <View style={styles.acceptWrap}>
-            <Text style={styles.acceptText}>Accepted</Text>
-            <Switch value={acceptedAgreement} onValueChange={setAcceptedAgreement} />
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 14,
+            lineHeight: 20,
+          }}>
+          Read how experimemo handles local experiment data, attached photos, and support requests.
+        </AppText>
+        <View style={styles.cardBottomRow}>
+          <AppButton
+            label="Open policy"
+            onPress={() => {
+              void openExternalLink(APP_LINKS.privacy);
+            }}
+            style={{
+              backgroundColor: colors.background,
+              borderColor: colors.primary,
+              borderRadius: 999,
+              borderWidth: 1,
+            }}
+            variant="outlined"
+          />
+          <View style={styles.toggleWrap}>
+            <AppText
+              style={{
+                color: colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 13,
+                fontWeight: '700',
+              }}>
+              Accepted
+            </AppText>
+            <Switch onValueChange={setAcceptedPrivacy} value={acceptedPrivacy} />
           </View>
         </View>
-      </View>
-      <View style={styles.card}>
-        <View style={styles.rowTop}>
-          <Text style={styles.cardTitle}>Terms of service</Text>
-          <Text style={styles.meta}>{termsUpdated}</Text>
+      </SurfaceCard>
+
+      <SurfaceCard>
+        <View style={styles.cardTopRow}>
+          <AppText
+            style={{
+              color: colors.text,
+              fontFamily: theme.typography.fontBody,
+              fontSize: 18,
+              fontWeight: '800',
+            }}>
+            Terms of service
+          </AppText>
         </View>
-        <Text style={styles.cardBody}>
-          Production-safe baseline terms with placeholders for business specifics.
-        </Text>
-        <View style={styles.rowBottom}>
-          <Link href="/onboarding/terms" asChild>
-            <Pressable accessibilityRole="button" style={styles.linkButton}>
-              <Text style={styles.linkButtonText}>View terms</Text>
-            </Pressable>
-          </Link>
-          <View style={styles.acceptWrap}>
-            <Text style={styles.acceptText}>Accepted</Text>
-            <Switch value={acceptedTerms} onValueChange={setAcceptedTerms} />
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 14,
+            lineHeight: 20,
+          }}>
+          Review the live terms before you start saving and updating experiment records.
+        </AppText>
+        <View style={styles.cardBottomRow}>
+          <AppButton
+            label="Open terms"
+            onPress={() => {
+              void openExternalLink(APP_LINKS.terms);
+            }}
+            style={{
+              backgroundColor: colors.background,
+              borderColor: colors.primary,
+              borderRadius: 999,
+              borderWidth: 1,
+            }}
+            variant="outlined"
+          />
+          <View style={styles.toggleWrap}>
+            <AppText
+              style={{
+                color: colors.text,
+                fontFamily: theme.typography.fontBody,
+                fontSize: 13,
+                fontWeight: '700',
+              }}>
+              Accepted
+            </AppText>
+            <Switch onValueChange={setAcceptedTerms} value={acceptedTerms} />
           </View>
         </View>
-      </View>
-      <Pressable
-        accessibilityRole="button"
+      </SurfaceCard>
+
+      <AppButton
         disabled={!canContinue}
+        label="Continue"
         onPress={() => {
-          if (canContinue) router.push('/onboarding/account-setup');
+          if (canContinue) {
+            router.push('/onboarding/account-setup');
+          }
         }}
-        style={[styles.ctaButton, !canContinue && styles.ctaButtonDisabled]}>
-        <Text style={styles.ctaButtonText}>Continue to account setup</Text>
-      </Pressable>
-    </View>
+        style={{
+          backgroundColor: canContinue ? colors.primary : colors.surface,
+          borderRadius: 12,
+          opacity: canContinue ? 1 : 0.7,
+        }}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    backgroundColor: '#ffffff',
-    flex: 1,
+  cardBottomRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  cardTopRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  content: {
     gap: 14,
     padding: 20,
+    paddingBottom: 28,
   },
-  title: {
-    color: '#111827',
-    fontSize: 26,
-    fontWeight: '800',
-  },
-  body: {
-    color: '#4b5563',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d1d5db',
-    borderRadius: 12,
-    borderWidth: 1,
+  header: {
     gap: 8,
-    padding: 14,
   },
-  rowTop: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  screen: {
+    flex: 1,
   },
-  rowBottom: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  cardTitle: {
-    color: '#111827',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  cardBody: {
-    color: '#4b5563',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  meta: {
-    color: '#6b7280',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  linkButton: {
-    backgroundColor: '#111827',
-    borderRadius: 9,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  linkButtonText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  acceptWrap: {
+  toggleWrap: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
-  },
-  acceptText: {
-    color: '#111827',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  ctaButton: {
-    alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
-    marginTop: 'auto',
-    paddingVertical: 14,
-  },
-  ctaButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  ctaButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
   },
 });

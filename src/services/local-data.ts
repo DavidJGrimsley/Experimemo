@@ -1,13 +1,20 @@
 import {
   seedExperiments,
-  type ExperimentDraftInput,
+  type ExperimentInput,
   type ExperimentRecord,
+  type ExperimentStatus,
 } from '../features/experiments/experiment-models';
 
-let experiments: ExperimentRecord[] = [...seedExperiments];
+let experiments: ExperimentRecord[] = [];
+let hasBootstrappedExperiments = false;
 
 export async function ensureLocalDataReady(): Promise<void> {
-  experiments = experiments.length > 0 ? experiments : [...seedExperiments];
+  if (hasBootstrappedExperiments) {
+    return;
+  }
+
+  experiments = [...seedExperiments];
+  hasBootstrappedExperiments = true;
 }
 
 export async function listExperiments(): Promise<ExperimentRecord[]> {
@@ -20,9 +27,7 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
   return experiments.find((experiment) => experiment.id === id) ?? null;
 }
 
-export async function createExperimentDraft(
-  input: ExperimentDraftInput
-): Promise<ExperimentRecord> {
+export async function createExperiment(input: ExperimentInput): Promise<ExperimentRecord> {
   await ensureLocalDataReady();
   const timestamp = new Date().toISOString();
   const experiment: ExperimentRecord = {
@@ -32,11 +37,13 @@ export async function createExperimentDraft(
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
-    status: input.resultsNotes.trim() ? 'active' : 'draft',
+    status: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -45,9 +52,25 @@ export async function createExperimentDraft(
   return experiment;
 }
 
+export async function deleteExperiments(ids: string[]): Promise<void> {
+  await ensureLocalDataReady();
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const idsToDelete = new Set(ids);
+  experiments = experiments.filter((experiment) => !idsToDelete.has(experiment.id));
+}
+
+export async function resetExperiments(): Promise<void> {
+  await ensureLocalDataReady();
+  experiments = [];
+}
+
 export async function updateExperiment(
   id: string,
-  input: ExperimentDraftInput
+  input: ExperimentInput
 ): Promise<ExperimentRecord | null> {
   await ensureLocalDataReady();
   const existing = experiments.find((experiment) => experiment.id === id);
@@ -63,12 +86,35 @@ export async function updateExperiment(
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     updatedAt: new Date().toISOString(),
-    status: input.resultsNotes.trim() ? 'active' : existing.status,
+    status: existing.status === 'complete' ? 'complete' : 'active',
+  };
+
+  experiments = experiments.map((experiment) => (experiment.id === id ? updated : experiment));
+  return updated;
+}
+
+export async function updateExperimentStatus(
+  id: string,
+  status: ExperimentStatus
+): Promise<ExperimentRecord | null> {
+  await ensureLocalDataReady();
+  const existing = experiments.find((experiment) => experiment.id === id);
+
+  if (!existing) {
+    return null;
+  }
+
+  const updated: ExperimentRecord = {
+    ...existing,
+    status,
+    updatedAt: new Date().toISOString(),
   };
 
   experiments = experiments.map((experiment) => (experiment.id === id ? updated : experiment));
@@ -80,5 +126,7 @@ export const experimentDataBoundaryNotes = [
   'Native builds use local-data.native.ts for the Expo SQLite implementation.',
   'Keep experiment screens behind this adapter boundary so SQLite or Supabase can be swapped later.',
   'Attached photos are stored as local picker URI metadata on the experiment record.',
+  'Result entry photos are stored as local picker URI metadata inside the result entry list.',
+  'Resetting or deleting all records does not re-seed starter experiments in the same app session.',
   'A later media step can replace local URI references with a stronger file-storage strategy if needed.',
 ];

@@ -2,13 +2,25 @@ import * as SQLite from 'expo-sqlite';
 
 import {
   seedExperiments,
-  type ExperimentDraftInput,
+  type ExperimentInput,
   type ExperimentRecord,
+  type ExperimentStatus,
 } from '../features/experiments/experiment-models';
 
 const dbPromise = SQLite.openDatabaseAsync('experiment-tracker.db');
+const bootstrapKey = 'experiments_bootstrapped';
 let sqliteUnavailable = false;
-let memoryExperiments: ExperimentRecord[] = [...seedExperiments];
+let memoryExperiments: ExperimentRecord[] = [];
+let memoryHasBootstrappedExperiments = false;
+
+function ensureMemoryBootstrapped() {
+  if (memoryHasBootstrappedExperiments) {
+    return;
+  }
+
+  memoryExperiments = [...seedExperiments];
+  memoryHasBootstrappedExperiments = true;
+}
 
 async function getDb() {
   if (sqliteUnavailable) {
@@ -27,6 +39,32 @@ function sortExperiments(experiments: ExperimentRecord[]) {
   return [...experiments].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
+function parseResultEntries(value: string): ExperimentRecord['resultEntries'] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? (parsed as ExperimentRecord['resultEntries']) : [];
+  } catch {
+    return [];
+  }
+}
+
+function parsePhotoAssets(value: string): ExperimentRecord['photoAssets'] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? (parsed as ExperimentRecord['photoAssets']) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function setBootstrapSentinel(db: SQLite.SQLiteDatabase) {
+  await db.runAsync(
+    'INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)',
+    bootstrapKey,
+    'true'
+  );
+}
+
 function normalizeRecord(record: {
   id: string;
   title: string;
@@ -35,7 +73,9 @@ function normalizeRecord(record: {
   procedure: string;
   data_plan: string;
   results_notes: string;
+  result_entries: string;
   notes: string;
+  conclusion_notes: string;
   planned_attachment_count: number;
   photo_assets: string;
   status: ExperimentRecord['status'];
@@ -49,11 +89,13 @@ function normalizeRecord(record: {
     hypothesis: record.hypothesis,
     procedure: record.procedure,
     dataPlan: record.data_plan,
-    resultsNotes: record.results_notes,
+    observationsNotes: record.results_notes,
+    resultEntries: parseResultEntries(record.result_entries),
     notes: record.notes,
+    conclusionNotes: record.conclusion_notes,
     plannedAttachmentCount: record.planned_attachment_count,
-    photoAssets: JSON.parse(record.photo_assets || '[]') as ExperimentRecord['photoAssets'],
-    status: record.status,
+    photoAssets: parsePhotoAssets(record.photo_assets),
+    status: record.status === 'complete' ? 'complete' : 'active',
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
@@ -63,10 +105,18 @@ export async function ensureLocalDataReady(): Promise<void> {
   const db = await getDb();
 
   if (!db) {
+    ensureMemoryBootstrapped();
     return;
   }
 
   try {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS app_state (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS experiments (
         id TEXT PRIMARY KEY NOT NULL,
@@ -76,7 +126,9 @@ export async function ensureLocalDataReady(): Promise<void> {
         procedure TEXT NOT NULL,
         data_plan TEXT NOT NULL,
         results_notes TEXT NOT NULL,
+        result_entries TEXT NOT NULL DEFAULT '[]',
         notes TEXT NOT NULL,
+        conclusion_notes TEXT NOT NULL DEFAULT '',
         planned_attachment_count INTEGER NOT NULL DEFAULT 0,
         photo_assets TEXT NOT NULL DEFAULT '[]',
         status TEXT NOT NULL,
@@ -94,11 +146,41 @@ export async function ensureLocalDataReady(): Promise<void> {
       // Older installs may already have this column, so the migration can noop safely.
     }
 
+    try {
+      await db.execAsync(`
+        ALTER TABLE experiments
+        ADD COLUMN result_entries TEXT NOT NULL DEFAULT '[]';
+      `);
+    } catch {
+      // Older installs may already have this column, so the migration can noop safely.
+    }
+
+    try {
+      await db.execAsync(`
+        ALTER TABLE experiments
+        ADD COLUMN conclusion_notes TEXT NOT NULL DEFAULT '';
+      `);
+    } catch {
+      // Older installs may already have this column, so the migration can noop safely.
+    }
+
+    await db.runAsync(`UPDATE experiments SET status = 'active' WHERE status = 'draft'`);
+
+    const bootstrapRow = await db.getFirstAsync<{ value: string }>(
+      'SELECT value FROM app_state WHERE key = ?',
+      bootstrapKey
+    );
+
+    if (bootstrapRow?.value === 'true') {
+      return;
+    }
+
     const row = await db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) as count FROM experiments'
     );
 
     if ((row?.count ?? 0) > 0) {
+      await setBootstrapSentinel(db);
       return;
     }
 
@@ -112,21 +194,25 @@ export async function ensureLocalDataReady(): Promise<void> {
           procedure,
           data_plan,
           results_notes,
+          result_entries,
           notes,
+          conclusion_notes,
           planned_attachment_count,
           photo_assets,
           status,
           created_at,
           updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         experiment.id,
         experiment.title,
         experiment.category,
         experiment.hypothesis,
         experiment.procedure,
         experiment.dataPlan,
-        experiment.resultsNotes,
+        experiment.observationsNotes,
+        JSON.stringify(experiment.resultEntries),
         experiment.notes,
+        experiment.conclusionNotes,
         experiment.plannedAttachmentCount,
         JSON.stringify(experiment.photoAssets),
         experiment.status,
@@ -134,8 +220,11 @@ export async function ensureLocalDataReady(): Promise<void> {
         experiment.updatedAt
       );
     }
+
+    await setBootstrapSentinel(db);
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
   }
 }
 
@@ -156,7 +245,9 @@ export async function listExperiments(): Promise<ExperimentRecord[]> {
       procedure: string;
       data_plan: string;
       results_notes: string;
+      result_entries: string;
       notes: string;
+      conclusion_notes: string;
       planned_attachment_count: number;
       photo_assets: string;
       status: ExperimentRecord['status'];
@@ -167,6 +258,7 @@ export async function listExperiments(): Promise<ExperimentRecord[]> {
     return records.map(normalizeRecord);
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
     return sortExperiments(memoryExperiments);
   }
 }
@@ -188,7 +280,9 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
       procedure: string;
       data_plan: string;
       results_notes: string;
+      result_entries: string;
       notes: string;
+      conclusion_notes: string;
       planned_attachment_count: number;
       photo_assets: string;
       status: ExperimentRecord['status'];
@@ -199,13 +293,12 @@ export async function getExperimentById(id: string): Promise<ExperimentRecord | 
     return record ? normalizeRecord(record) : null;
   } catch {
     sqliteUnavailable = true;
+    ensureMemoryBootstrapped();
     return memoryExperiments.find((experiment) => experiment.id === id) ?? null;
   }
 }
 
-export async function createExperimentDraft(
-  input: ExperimentDraftInput
-): Promise<ExperimentRecord> {
+export async function createExperiment(input: ExperimentInput): Promise<ExperimentRecord> {
   await ensureLocalDataReady();
   const db = await getDb();
   const timestamp = new Date().toISOString();
@@ -216,16 +309,19 @@ export async function createExperimentDraft(
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
-    status: input.resultsNotes.trim() ? 'active' : 'draft',
+    status: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 
   if (!db) {
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = [experiment, ...memoryExperiments];
     return experiment;
   }
@@ -240,21 +336,25 @@ export async function createExperimentDraft(
         procedure,
         data_plan,
         results_notes,
+        result_entries,
         notes,
+        conclusion_notes,
         planned_attachment_count,
         photo_assets,
         status,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       experiment.id,
       experiment.title,
       experiment.category,
       experiment.hypothesis,
       experiment.procedure,
       experiment.dataPlan,
-      experiment.resultsNotes,
+      experiment.observationsNotes,
+      JSON.stringify(experiment.resultEntries),
       experiment.notes,
+      experiment.conclusionNotes,
       experiment.plannedAttachmentCount,
       JSON.stringify(experiment.photoAssets),
       experiment.status,
@@ -265,14 +365,59 @@ export async function createExperimentDraft(
     return experiment;
   } catch {
     sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = [experiment, ...memoryExperiments];
     return experiment;
   }
 }
 
+export async function deleteExperiments(ids: string[]): Promise<void> {
+  await ensureLocalDataReady();
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const idsToDelete = new Set(ids);
+  const db = await getDb();
+
+  if (!db) {
+    memoryExperiments = memoryExperiments.filter((experiment) => !idsToDelete.has(experiment.id));
+    return;
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(', ');
+    await db.runAsync(`DELETE FROM experiments WHERE id IN (${placeholders})`, ...ids);
+  } catch {
+    sqliteUnavailable = true;
+    memoryExperiments = memoryExperiments.filter((experiment) => !idsToDelete.has(experiment.id));
+  }
+}
+
+export async function resetExperiments(): Promise<void> {
+  await ensureLocalDataReady();
+  const db = await getDb();
+
+  if (!db) {
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = [];
+    return;
+  }
+
+  try {
+    await db.runAsync('DELETE FROM experiments');
+    await setBootstrapSentinel(db);
+  } catch {
+    sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = [];
+  }
+}
+
 export async function updateExperiment(
   id: string,
-  input: ExperimentDraftInput
+  input: ExperimentInput
 ): Promise<ExperimentRecord | null> {
   await ensureLocalDataReady();
   const current = await getExperimentById(id);
@@ -288,17 +433,20 @@ export async function updateExperiment(
     hypothesis: input.hypothesis.trim(),
     procedure: input.procedure.trim(),
     dataPlan: input.dataPlan.trim(),
-    resultsNotes: input.resultsNotes.trim(),
+    observationsNotes: input.observationsNotes.trim(),
+    resultEntries: input.resultEntries,
     notes: input.notes.trim(),
+    conclusionNotes: input.conclusionNotes.trim(),
     plannedAttachmentCount: input.plannedAttachmentCount,
     photoAssets: input.photoAssets,
     updatedAt: new Date().toISOString(),
-    status: input.resultsNotes.trim() ? 'active' : current.status,
+    status: current.status === 'complete' ? 'complete' : 'active',
   };
 
   const db = await getDb();
 
   if (!db) {
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = memoryExperiments.map((experiment) =>
       experiment.id === id ? updated : experiment
     );
@@ -309,15 +457,18 @@ export async function updateExperiment(
     await db.runAsync(
       `UPDATE experiments
        SET title = ?, category = ?, hypothesis = ?, procedure = ?, data_plan = ?,
-           results_notes = ?, notes = ?, planned_attachment_count = ?, photo_assets = ?, status = ?, updated_at = ?
+           results_notes = ?, result_entries = ?, notes = ?, conclusion_notes = ?,
+           planned_attachment_count = ?, photo_assets = ?, status = ?, updated_at = ?
        WHERE id = ?`,
       updated.title,
       updated.category,
       updated.hypothesis,
       updated.procedure,
       updated.dataPlan,
-      updated.resultsNotes,
+      updated.observationsNotes,
+      JSON.stringify(updated.resultEntries),
       updated.notes,
+      updated.conclusionNotes,
       updated.plannedAttachmentCount,
       JSON.stringify(updated.photoAssets),
       updated.status,
@@ -328,6 +479,55 @@ export async function updateExperiment(
     return updated;
   } catch {
     sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = memoryExperiments.map((experiment) =>
+      experiment.id === id ? updated : experiment
+    );
+    return updated;
+  }
+}
+
+export async function updateExperimentStatus(
+  id: string,
+  status: ExperimentStatus
+): Promise<ExperimentRecord | null> {
+  await ensureLocalDataReady();
+  const current = await getExperimentById(id);
+
+  if (!current) {
+    return null;
+  }
+
+  const updated: ExperimentRecord = {
+    ...current,
+    status,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const db = await getDb();
+
+  if (!db) {
+    memoryHasBootstrappedExperiments = true;
+    memoryExperiments = memoryExperiments.map((experiment) =>
+      experiment.id === id ? updated : experiment
+    );
+    return updated;
+  }
+
+  try {
+    await db.runAsync(
+      `UPDATE experiments
+       SET status = ?, updated_at = ?
+       WHERE id = ?`,
+      updated.status,
+      updated.updatedAt,
+      id
+    );
+
+    return updated;
+  } catch {
+    sqliteUnavailable = true;
+    memoryHasBootstrappedExperiments = true;
     memoryExperiments = memoryExperiments.map((experiment) =>
       experiment.id === id ? updated : experiment
     );
@@ -340,5 +540,6 @@ export const experimentDataBoundaryNotes = [
   'If SQLite is unavailable, the service falls back to in-memory dummy records so the app still runs.',
   'Feature screens read and write through this boundary instead of speaking to SQLite directly.',
   'Attached photos are stored as local picker URI metadata on the experiment record.',
+  'Resetting or deleting all records does not re-seed starter experiments after the first bootstrap.',
   'A later media step can replace local URI references with a stronger file-storage strategy if needed.',
 ];

@@ -1,18 +1,27 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { startTransition, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+
+import { AppButton } from '@/components/app-button';
+import { AppTextField } from '@/components/app-text-field';
+import { AppText } from '@/components/app-text';
+import { ScreenHeader } from '@/components/screen-header';
+import { SurfaceCard } from '@/components/surface-card';
+import { useAppTheme } from '@/theme/provider';
 
 import {
   initialExperimentFormState,
-  toExperimentDraftInput,
+  toExperimentInput,
   type ExperimentFormState,
 } from '../experiments/experiment-form-types';
 import { pickExperimentPhotos } from '../experiments/photo-picker';
-import { createExperimentDraft } from '../experiments/experiment-store';
-import { useAppTheme } from '../../theme/provider';
+import { createExperiment } from '../experiments/experiment-store';
 
-type ExperimentFormTextFieldKey = Exclude<keyof ExperimentFormState, 'photoAssets'>;
+type ExperimentFormTextFieldKey = Exclude<
+  keyof ExperimentFormState,
+  'photoAssets' | 'resultEntries'
+>;
 
 const fields: {
   key: ExperimentFormTextFieldKey;
@@ -24,12 +33,12 @@ const fields: {
   {
     key: 'title',
     label: 'Experiment title',
-    placeholder: 'Ex. Plant growth with indirect sunlight',
+    placeholder: 'Plant growth with indirect sunlight',
   },
   {
     key: 'category',
-    label: 'Folder or category',
-    placeholder: 'Ex. Botany, Chemistry, Physics',
+    label: 'Category',
+    placeholder: 'Botany, Chemistry, Physics',
   },
   {
     key: 'hypothesis',
@@ -40,7 +49,7 @@ const fields: {
   {
     key: 'procedure',
     label: 'Procedure',
-    placeholder: 'Outline the setup, materials, and repeatable steps.',
+    placeholder: 'List the setup, materials, and repeatable steps.',
     multiline: true,
   },
   {
@@ -50,16 +59,21 @@ const fields: {
     multiline: true,
   },
   {
-    key: 'resultsNotes',
-    label: 'Results and observations',
-    placeholder:
-      'Record what actually happened, early observations, or leave this for later updates.',
+    key: 'observationsNotes',
+    label: 'Observations',
+    placeholder: 'You can leave this blank until you start recording observations.',
     multiline: true,
   },
   {
     key: 'notes',
     label: 'Field notes',
-    placeholder: 'Add quick reminders, context, or photo plans.',
+    placeholder: 'Capture reminders, context, or setup details.',
+    multiline: true,
+  },
+  {
+    key: 'conclusionNotes',
+    label: 'Conclusion',
+    placeholder: 'Summarize what the experiment shows when you are ready.',
     multiline: true,
   },
   {
@@ -91,6 +105,7 @@ export default function NewExperimentScreen() {
   const colors = theme.activeColors;
   const [form, setForm] = useState(initialExperimentFormState);
   const [errors, setErrors] = useState<Partial<Record<keyof ExperimentFormState, string>>>({});
+  const [formVersion, setFormVersion] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSave() {
@@ -104,10 +119,11 @@ export default function NewExperimentScreen() {
     setIsSaving(true);
 
     try {
-      await createExperimentDraft(toExperimentDraftInput(form));
+      await createExperiment(toExperimentInput(form));
       startTransition(() => {
         setForm(initialExperimentFormState);
         setErrors({});
+        setFormVersion((current) => current + 1);
       });
       router.push('/track');
     } finally {
@@ -122,124 +138,64 @@ export default function NewExperimentScreen() {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       style={[styles.screen, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.eyebrow,
-            {
-              color: colors.primary,
-              fontFamily: theme.typography.fontFamily,
-            },
-          ]}>
-          First Core Flow
-        </Text>
-        <Text
-          style={[
-            styles.title,
-            {
-              color: colors.text,
-              fontFamily: theme.typography.fontFamily,
-              fontWeight:
-                theme.typography.fontFamily === 'System' ||
-                theme.typography.fontFamily === 'monospace'
-                  ? '800'
-                  : 'normal',
-            },
-          ]}>
-          Create an experiment
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.text }]}>
-          Start the experiment with the core setup, then update the results and observations later
-          from the experiment record.
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.highlightCard,
-          {
-            backgroundColor: colors.primary,
-            borderRadius: theme.layout.radius,
-          },
-        ]}>
-        <Text style={styles.highlightTitle}>What the results field means</Text>
-        <Text style={styles.highlightBody}>
-          This is where you record what actually happened. If you have not run the experiment yet,
-          you can leave it blank and fill it in later from the Track tab.
-        </Text>
-      </View>
+      <ScreenHeader
+        showInfoAction
+        subtitle="Capture the plan now, then come back to update observations, notes, and photos as the experiment unfolds."
+        title="Create experiment"
+      />
 
       <View style={styles.formSection}>
         {fields.map((field) => (
-          <View
-            key={field.key}
-            style={[
-              styles.fieldCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: errors[field.key] ? colors.warning : colors.primary,
-                borderRadius: theme.layout.radius,
-              },
-            ]}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>{field.label}</Text>
-            <TextInput
-              keyboardType={field.keyboardType}
-              multiline={field.multiline}
-              onChangeText={(value) => {
-                setForm((current) => ({ ...current, [field.key]: value }));
-                setErrors((current) => ({ ...current, [field.key]: undefined }));
-              }}
-              placeholder={field.placeholder}
-              placeholderTextColor="#6b7280"
-              style={[
-                styles.input,
-                styles.inputBase,
-                field.multiline ? styles.multilineInput : styles.singleLineInput,
-                {
-                  backgroundColor: colors.background,
-                  borderColor: errors[field.key] ? colors.warning : colors.surface,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical={field.multiline ? 'top' : 'center'}
-              value={form[field.key]}
-            />
-            {errors[field.key] ? (
-              <Text style={[styles.errorText, { color: colors.warning }]}>{errors[field.key]}</Text>
-            ) : null}
-          </View>
+          <AppTextField
+            error={errors[field.key]}
+            key={`${formVersion}-${field.key}`}
+            keyboardType={field.keyboardType}
+            label={field.label}
+            multiline={field.multiline}
+            onChangeText={(value) => {
+              setForm((current) => ({ ...current, [field.key]: value }));
+              setErrors((current) => ({ ...current, [field.key]: undefined }));
+            }}
+            placeholder={field.placeholder}
+            value={form[field.key]}
+          />
         ))}
       </View>
 
-      <View
-        style={[
-          styles.noteCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.primary,
-            borderRadius: theme.layout.radius,
-          },
-        ]}>
-        <Text style={[styles.noteTitle, { color: colors.text }]}>Photos</Text>
-        <Text style={[styles.noteBody, { color: colors.text }]}>
-          Attach experiment photos now, or save first and add more later from the experiment record.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
+      <SurfaceCard>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 17,
+            fontWeight: '800',
+          }}>
+          Photos
+        </AppText>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 14,
+            lineHeight: 20,
+          }}>
+          Add photos now or attach them later from the experiment record.
+        </AppText>
+        <AppButton
+          label="Add photos"
           onPress={() => {
             void pickExperimentPhotos(form.photoAssets).then((photoAssets) => {
               setForm((current) => ({ ...current, photoAssets }));
             });
           }}
-          style={StyleSheet.flatten([
-            styles.secondaryButton,
-            {
-              backgroundColor: colors.background,
-              borderColor: colors.primary,
-            },
-          ])}>
-          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Add photos</Text>
-        </Pressable>
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.primary,
+            borderRadius: 999,
+            borderWidth: 1,
+          }}
+          variant="outlined"
+        />
         {form.photoAssets.length > 0 ? (
           <View style={styles.photoGrid}>
             {form.photoAssets.map((photo) => (
@@ -251,147 +207,60 @@ export default function NewExperimentScreen() {
             ))}
           </View>
         ) : null}
-      </View>
+      </SurfaceCard>
 
-      <View
-        style={[
-          styles.noteCard,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.primary,
-            borderRadius: theme.layout.radius,
-          },
-        ]}>
-        <Text style={[styles.noteTitle, { color: colors.text }]}>After saving</Text>
-        <Text style={[styles.noteBody, { color: colors.text }]}>
-          The record appears in Track immediately, where you can reopen it to edit procedure,
-          results, notes, attached photos, and the photo plan.
-        </Text>
+      <SurfaceCard>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 17,
+            fontWeight: '800',
+          }}>
+          Save and continue later
+        </AppText>
+        <AppText
+          style={{
+            color: colors.text,
+            fontFamily: theme.typography.fontBody,
+            fontSize: 14,
+            lineHeight: 20,
+          }}>
+          Your experiment appears in Track right away so you can keep building it out whenever you
+          need to.
+        </AppText>
         <View style={styles.actions}>
-          <Pressable
-            accessibilityRole="button"
+          <AppButton
             disabled={isSaving}
+            label={isSaving ? 'Saving...' : 'Save experiment'}
             onPress={() => {
               void handleSave();
             }}
-            style={StyleSheet.flatten([
-              styles.primaryButton,
-              {
-                backgroundColor: colors.primary,
-                opacity: isSaving ? 0.7 : 1,
-              },
-            ])}>
-            <Text style={styles.primaryButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
-          </Pressable>
-          <Link href="/track" asChild>
-            <Pressable
-              accessibilityRole="button"
-              style={StyleSheet.flatten([
-                styles.secondaryButton,
-                {
-                  backgroundColor: colors.background,
-                  borderColor: colors.primary,
-                },
-              ])}>
-              <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
-                View existing experiments
-              </Text>
-            </Pressable>
-          </Link>
+            style={{
+              alignSelf: 'stretch',
+              backgroundColor: colors.secondary,
+              borderRadius: 999,
+              minHeight: 48,
+              opacity: isSaving ? 0.7 : 1,
+            }}
+          />
         </View>
-      </View>
+      </SurfaceCard>
     </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
+  actions: {
+    gap: 10,
   },
   content: {
     gap: 16,
     padding: 20,
     paddingBottom: 28,
   },
-  header: {
-    gap: 8,
-  },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  highlightCard: {
-    gap: 8,
-    padding: 18,
-  },
-  highlightTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  highlightBody: {
-    color: '#ebfef0',
-    fontSize: 14,
-    lineHeight: 20,
-  },
   formSection: {
     gap: 12,
-  },
-  fieldCard: {
-    borderWidth: 1,
-    gap: 8,
-    padding: 16,
-  },
-  fieldLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  input: {
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  inputBase: {
-    fontSize: 14,
-    lineHeight: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  singleLineInput: {
-    minHeight: 50,
-  },
-  multilineInput: {
-    minHeight: 112,
-  },
-  errorText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  noteCard: {
-    borderWidth: 1,
-    gap: 10,
-    padding: 16,
-  },
-  noteTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  noteBody: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  actions: {
-    gap: 10,
   },
   photoGrid: {
     flexDirection: 'row',
@@ -404,26 +273,7 @@ const styles = StyleSheet.create({
     height: 84,
     width: 84,
   },
-  primaryButton: {
-    alignItems: 'center',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '800',
+  screen: {
+    flex: 1,
   },
 });

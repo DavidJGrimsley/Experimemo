@@ -31,13 +31,6 @@ export default function TabLayout() {
         />
         <NativeTabs.Trigger.Label>Track</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Icon
-          md={{ default: 'settings', selected: 'settings_applications' }}
-          sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
-        />
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

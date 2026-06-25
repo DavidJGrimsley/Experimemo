@@ -1,4 +1,4 @@
-# experimental3 TODO
+# experimemo TODO
 
 ## Phase 0: Orientation And Planning
 
@@ -36,8 +36,26 @@
 - [x] Prepare store/distribution packaging, review notes, and release validation for the chosen delivery path
 - [x] Confirm branch protection, CI checks, and release gating match the planned ship workflow
 - [x] Run `mds doctor --ci` and address errors
-- [ ] Follow `project/release-flow.md` for test-to-main development
-- [ ] Complete the one-time GitHub repo setup from `project/release-flow.md` so `test` and `main` are protected correctly
-- [ ] Add GitHub branch protection so PR checks pass before merging into `test` or `main`
+- [x] Follow `project/release-flow.md` for test-to-main development
+- [x] Complete the one-time GitHub repo setup from `project/release-flow.md` so `test` and `main` are protected correctly
+- [x] Add GitHub branch protection so PR checks pass before merging into `test` or `main`
 - [x] Prepare the release flow for: App Store and test-to-main safeguards
-- [ ] Close or explicitly defer the remaining open questions before production release
+- [x] Close or explicitly defer the remaining open questions before production release
+
+## Extra Changes to MVP
+- [x] Replace everything possible with universal components from Expo UI and use nativetabs from Expo UI as well for the tab navigator.
+- [x] Remove developer facing notes and todos from the app screens - make all copy user-facing.
+- [x] Remove 'what the results field means' view from create page
+- [x] in the experiment [id] page, Add a toggle to mark experiments as complete and move them to a completed section in the track page
+- [x] The experiment [id] page has header issues, too large and doesn't say the name of the experiment but the name may be too long so let's just leave that blank and have the experiment name as the title to replace 'edit experiment'.
+- [x] Remove the settings tab
+- [x] Put an info circle icon in the header which should open up a large modal with settings, about, and feedback sections. Settings will contain 'Delete Experiments' and 'Reset App' buttons, which will allow the user to delete experiments from a list or reset the entire app data. The about section will have info about the dev (me) and the feedback section will have a link to the GitHub repo and instructions for how to submit feedback and issues.
+- [x] the 'Experiment' needs work. specifically, the results section. Let's just rename that to only 'Observations' but below that we should have a section for Results which will be more dynamic and allow the user to track multiple result entries with a date and time and notes and photos for each result entry. This will allow the user to track the experiment over time and have a more complete picture of how it went.
+- [x] Add a 'Conclusion' section below Field Notes
+- [x] Add the ability to take pictures from the add photo button instead of just uploading from the library like most apps do.
+- [x] Fix issue where the view border colors are sometimes orange instead of green. 
+- [x] Update the app to use the urls of: https://davidjgrimsley.com/experimemo/support, https://davidjgrimsley.com/experimemo/terms, and https://davidjgrimsley.com/experimemo/privacy for the support URL, terms of service URL, and privacy policy URL respectively. 
+- [x] The preloaded example experiments aren't in the delete list. Add them to the db so they can be deleted by the user without resetting the app and possibly their data which is currently the only way to do so. Also add '(Example)' to the title of the preloaded experiments so the user can easily identify them as examples. 
+
+## Future Considerations (post-MVP)
+- [ ] Add a 'control' field to the experiments and possibly a toggle for 'the scientific method' which will add the control field and possibly change the layout of the create and experiment pages to reflect the different flow of the scientific method. This is a common framework for conducting experiments and it would be helpful to have it built into the app for users who want to follow that structure. The current flow is more of a simple experiment/observation tracker which is fine. 
