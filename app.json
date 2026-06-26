@@ -13,10 +13,17 @@
     "plugins": [
       "expo-router",
       [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Yellowtail-Regular.ttf"]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "imageWidth": 200
         }
       ],
       [

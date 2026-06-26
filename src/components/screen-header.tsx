@@ -12,6 +12,7 @@ interface ScreenHeaderProps {
   eyebrow?: string;
   showInfoAction?: boolean;
   titleNumberOfLines?: number;
+  titleVariant?: 'default' | 'display';
   rightAccessory?: ReactNode;
 }
 
@@ -21,10 +22,12 @@ export function ScreenHeader({
   eyebrow,
   showInfoAction = false,
   titleNumberOfLines,
+  titleVariant = 'default',
   rightAccessory,
 }: ScreenHeaderProps) {
   const theme = useAppTheme();
   const colors = theme.activeColors;
+  const usesDisplayTitle = titleVariant === 'display';
 
   return (
     <View style={styles.header}>
@@ -46,10 +49,12 @@ export function ScreenHeader({
             numberOfLines={titleNumberOfLines}
             style={{
               color: colors.text,
-              fontFamily: theme.typography.fontFamily,
-              fontSize: 28,
-              fontWeight: '800',
-              lineHeight: 34,
+              fontFamily: usesDisplayTitle
+                ? theme.typography.fontDisplay
+                : theme.typography.fontFamily,
+              fontSize: usesDisplayTitle ? theme.typography.displaySize : 28,
+              fontWeight: usesDisplayTitle ? '400' : '800',
+              lineHeight: usesDisplayTitle ? 40 : 34,
             }}>
             {title}
           </AppText>
