@@ -1,4 +1,4 @@
-# experimemo CI And Release Gating
+# Experimemo CI And Release Gating
 
 ## Current Local Alignment
 

@@ -1,4 +1,4 @@
-# experimemo Release Flow
+# Experimemo Release Flow
 
 ## Test-To-Main Safeguards
 
@@ -54,7 +54,7 @@
   `npx eas-cli@latest build --platform ios --profile testflight`
 - Run a first successful local Android production build:
   `npx eas-cli@latest build --platform android --profile production`
-- App Store Connect app record for `experimemo` is already created with app ID
+- App Store Connect app record for `Experimemo` is already created with app ID
   `6781789138`.
 - In Expo credentials or the EAS dashboard, connect your Apple team and App Store
   Connect API key so TestFlight submissions can run non-interactively.
