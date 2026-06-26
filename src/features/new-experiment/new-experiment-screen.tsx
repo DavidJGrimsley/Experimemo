@@ -140,8 +140,9 @@ export default function NewExperimentScreen() {
       style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScreenHeader
         showInfoAction
-        subtitle="Capture the plan now, then come back to update observations, notes, and photos as the experiment unfolds."
-        title="Create experiment"
+        subtitle="Create a new experiment plan now, then update observations, results, notes, and photos as it unfolds."
+        title="Experimemo"
+        titleVariant="display"
       />
 
       <View style={styles.formSection}>

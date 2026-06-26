@@ -24,6 +24,7 @@
     "expo-doctor": "npx expo-doctor",
     "post-create-check": "npx expo install --fix && npx expo-doctor",
     "ci:verify": "npx mds doctor --ci",
+    "copy-icons": "node ./scripts/copy-pwa-icons.mjs",
     "test": "npm run lint && npm run typecheck",
     "patch:nativewind-metro": "node ./scripts/patch-nativewind-metro.cjs",
     "prestart": "node ./scripts/patch-nativewind-metro.cjs",

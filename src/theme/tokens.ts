@@ -154,7 +154,7 @@ export const stylistThemeTokens: StylistThemeTokens = {
   },
   typography: {
     fontFamily: 'System',
-    fontDisplay: 'System',
+    fontDisplay: 'Yellowtail',
     fontTitle: 'System',
     fontSubtitle: 'System',
     fontBody: 'System',

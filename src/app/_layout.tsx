@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { Platform, StatusBar, useColorScheme } from 'react-native';
 import { NavigationBar } from 'expo-navigation-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -11,6 +12,8 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import themeFontAssets from '../theme/font-assets';
 import { AppThemeProvider, useAppTheme } from '../theme/provider';
+
+void SplashScreen.preventAutoHideAsync();
 
 function RouterThemeBridge({ children }: { children: ReactNode }) {
   const theme = useAppTheme();
@@ -111,6 +114,12 @@ function LayoutInner() {
 export default function Layout() {
   const hasFontAssets = Object.keys(themeFontAssets).length > 0;
   const [fontsLoaded, fontsError] = useFonts(themeFontAssets);
+
+  useEffect(() => {
+    if (!hasFontAssets || fontsLoaded || fontsError) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsError, fontsLoaded, hasFontAssets]);
 
   if (hasFontAssets && !fontsLoaded && !fontsError) {
     return null;
