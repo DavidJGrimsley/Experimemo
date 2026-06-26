@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { useColorScheme } from 'react-native';
 
 import defaultThemeTokens, {
   type StylistColorPalette,
@@ -29,15 +30,19 @@ const AppThemeSetterContext = createContext<Dispatch<SetStateAction<StylistTheme
 );
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {
+  const systemScheme = useColorScheme();
   const [theme, setTheme] = useState<StylistThemeTokens>(defaultThemeTokens);
   const value = useMemo<AppThemeValue>(() => {
-    const activeScheme = theme.colorSystem.previewScheme;
+    const activeScheme: StylistColorScheme =
+      systemScheme === 'light' || systemScheme === 'dark'
+        ? systemScheme
+        : theme.colorSystem.previewScheme;
     return {
       ...theme,
       activeScheme,
       activeColors: theme.colors[activeScheme],
     };
-  }, [theme]);
+  }, [systemScheme, theme]);
 
   return (
     <AppThemeSetterContext.Provider value={setTheme}>
