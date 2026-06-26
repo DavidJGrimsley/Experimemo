@@ -1,4 +1,4 @@
-# experimemo Guidelines
+# Experimemo Guidelines
 
 ## MDS Template Baseline
 

@@ -62,7 +62,7 @@ export default function OnboardingScreen() {
             fontSize: 14,
             lineHeight: 20,
           }}>
-          Read how experimemo handles local experiment data, attached photos, and support requests.
+          Read how Experimemo handles local experiment data, attached photos, and support requests.
         </AppText>
         <View style={styles.cardBottomRow}>
           <AppButton

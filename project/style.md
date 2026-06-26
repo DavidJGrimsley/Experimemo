@@ -1,4 +1,4 @@
-# experimemo Style
+# Experimemo Style
 
 ## Visual Direction
 
