@@ -23,7 +23,12 @@
         {
           "image": "./assets/splash.png",
           "backgroundColor": "#ffffff",
-          "imageWidth": 200
+          "imageWidth": 200,
+          "dark": {
+            "image": "./assets/splash-dark.png",
+            "backgroundColor": "#09090b",
+            "imageWidth": 200
+          }
         }
       ],
       [
