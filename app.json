@@ -59,7 +59,7 @@
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "mrdj2u.experimemo",
       "buildNumber": "1",
       "infoPlist": {

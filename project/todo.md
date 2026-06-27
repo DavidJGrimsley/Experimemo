@@ -61,6 +61,7 @@
 - [x] Add dark mode support that must have been accidentally removed during eject stylist. It does not work on ios or android. It should be using the system setting.
 - [x] Capitalize the public app name as `Experimemo` everywhere user-facing, including TestFlight and in-app copy.
 - [x] Add light and dark mode splash screen support on a feature branch created from `test`, using Expo SDK 56 `expo-splash-screen` dark-mode config and a dark splash asset.
+- [x] Remove ipad support for faster mvp shipping. It will be added back in a future update after the MVP is released.
 
 ## Future Considerations (post-MVP)
 - [ ] Add a 'control' field to the experiments and possibly a toggle for 'the scientific method' which will add the control field and possibly change the layout of the create and experiment pages to reflect the different flow of the scientific method. This is a common framework for conducting experiments and it would be helpful to have it built into the app for users who want to follow that structure. The current flow is more of a simple experiment/observation tracker which is fine. 
