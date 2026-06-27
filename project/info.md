@@ -1,7 +1,7 @@
-# experimemo Project Info
+# Experimemo Project Info
 
 ## App Name
-experimemo
+Experimemo
 
 ## Overview
 
@@ -71,7 +71,7 @@ The following notes existed before MDS normalized this file. An agent should mov
 # Experiment-Tracker Project Info
 
 ## App Name
-experimemo
+Experimemo
 
 ## Overview
 

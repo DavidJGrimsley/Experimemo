@@ -1,4 +1,4 @@
-# experimemo App Store Release Prep
+# Experimemo App Store Release Prep
 
 ## Chosen Delivery Path
 
@@ -10,7 +10,7 @@
 
 ## Current Packaging Snapshot
 
-- App display name in config: `experimemo`
+- App display name in config: `Experimemo`
 - Scheme and slug: `experimemo`
 - Marketing version: `1.0.0`
 - iOS bundle identifier: `mrdj2u.experimemo`
@@ -28,7 +28,7 @@
 
 ## Store Metadata Still Needed Before Submission
 
-- Final customer-facing product name: `experimemo`
+- Final customer-facing product name: `Experimemo`
 - Final iOS bundle identifier: `mrdj2u.experimemo`
 - Final Android package name: `mrdj2u.experimemo`
 - Final versioning for the first release:

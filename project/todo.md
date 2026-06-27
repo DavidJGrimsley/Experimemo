@@ -1,4 +1,4 @@
-# experimemo TODO
+# Experimemo TODO
 
 ## Phase 0: Orientation And Planning
 
@@ -56,6 +56,11 @@
 - [x] Fix issue where the view border colors are sometimes orange instead of green. 
 - [x] Update the app to use the urls of: https://davidjgrimsley.com/experimemo/support, https://davidjgrimsley.com/experimemo/terms, and https://davidjgrimsley.com/experimemo/privacy for the support URL, terms of service URL, and privacy policy URL respectively. 
 - [x] The preloaded example experiments aren't in the delete list. Add them to the db so they can be deleted by the user without resetting the app and possibly their data which is currently the only way to do so. Also add '(Example)' to the title of the preloaded experiments so the user can easily identify them as examples. 
+- [x] I want to use this: https://fonts.google.com/specimen/Yellowtail?preview.text=Experimemo&specimen.preview.text=Experimemo&preview.layout=grid&preview.script=Latn and instead of 'create experiment' I want it to say 'Experimemo' in our display font. change the caption underneath to 'Create a new experiment plan now,...'
+- [x] Add icon to app in splash screen and output icon
+- [x] Add dark mode support that must have been accidentally removed during eject stylist. It does not work on ios or android. It should be using the system setting.
+- [x] Capitalize the public app name as `Experimemo` everywhere user-facing, including TestFlight and in-app copy.
+- [x] Add light and dark mode splash screen support on a feature branch created from `test`, using Expo SDK 56 `expo-splash-screen` dark-mode config and a dark splash asset.
 
 ## Future Considerations (post-MVP)
 - [ ] Add a 'control' field to the experiments and possibly a toggle for 'the scientific method' which will add the control field and possibly change the layout of the create and experiment pages to reflect the different flow of the scientific method. This is a common framework for conducting experiments and it would be helpful to have it built into the app for users who want to follow that structure. The current flow is more of a simple experiment/observation tracker which is fine. 

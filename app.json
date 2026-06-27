@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "experimemo",
+    "name": "Experimemo",
     "slug": "experimemo",
     "version": "1.0.0",
     "scheme": "experimemo",
@@ -13,10 +13,22 @@
     "plugins": [
       "expo-router",
       [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Yellowtail-Regular.ttf"]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "imageWidth": 200,
+          "dark": {
+            "image": "./assets/splash-dark.png",
+            "backgroundColor": "#09090b",
+            "imageWidth": 200
+          }
         }
       ],
       [

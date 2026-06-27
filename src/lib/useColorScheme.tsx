@@ -1,20 +1,15 @@
-import { useColorScheme as useNativewindColorScheme } from 'nativewind';
+import { useColorScheme as useSystemColorScheme } from 'react-native';
 
 import { COLORS } from '@/theme/colors';
 
 function useColorScheme() {
-  const { colorScheme, setColorScheme } = useNativewindColorScheme();
-
-  function toggleColorScheme() {
-    return setColorScheme(colorScheme === 'light' ? 'dark' : 'light');
-  }
+  const systemScheme = useSystemColorScheme();
+  const colorScheme = systemScheme === 'dark' ? 'dark' : 'light';
 
   return {
-    colorScheme: colorScheme ?? 'light',
+    colorScheme,
     isDarkColorScheme: colorScheme === 'dark',
-    setColorScheme,
-    toggleColorScheme,
-    colors: COLORS[colorScheme ?? 'light'],
+    colors: COLORS[colorScheme],
   };
 }
 

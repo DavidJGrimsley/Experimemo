@@ -249,7 +249,7 @@ export default function AppInfoModalScreen() {
           </AppText>
           <SettingsRow
             body="Experimemo helps you capture experiment setup, observations, notes, and photos without slowing the work down."
-            title="About experimemo"
+            title="About Experimemo"
           />
           <ExternalLink asChild href={APP_LINKS.support}>
             <SettingsRow
@@ -301,14 +301,14 @@ export default function AppInfoModalScreen() {
           <ExternalLink asChild href={APP_LINKS.terms}>
             <SettingsRow
               actionLabel="Open"
-              body="Read the current terms that apply when using experimemo."
+              body="Read the current terms that apply when using Experimemo."
               title="Terms of service"
             />
           </ExternalLink>
           <ExternalLink asChild href={APP_LINKS.privacy}>
             <SettingsRow
               actionLabel="Open"
-              body="Review how experimemo handles data and privacy."
+              body="Review how Experimemo handles data and privacy."
               title="Privacy policy"
             />
           </ExternalLink>

@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { Platform, StatusBar, useColorScheme } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { Platform, StatusBar } from 'react-native';
 import { NavigationBar } from 'expo-navigation-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,14 +13,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import themeFontAssets from '../theme/font-assets';
 import { AppThemeProvider, useAppTheme } from '../theme/provider';
 
+void SplashScreen.preventAutoHideAsync();
+
 function RouterThemeBridge({ children }: { children: ReactNode }) {
   const theme = useAppTheme();
-  const systemScheme = useColorScheme();
-  const prefersDark =
-    theme.colorSystem.mode === 'automatic'
-      ? systemScheme === 'dark'
-      : theme.colorSystem.previewScheme === 'dark';
-  const base = prefersDark ? DarkTheme : DefaultTheme;
+  const isDark = theme.activeScheme === 'dark';
+  const base = isDark ? DarkTheme : DefaultTheme;
   const shellColor = theme.activeColors.background;
   const routerTheme = useMemo(
     () => ({
@@ -46,6 +45,7 @@ function RouterThemeBridge({ children }: { children: ReactNode }) {
 
 function LayoutInner() {
   const theme = useAppTheme();
+  const isDark = theme.activeScheme === 'dark';
   const shellColor = theme.activeColors.background;
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: shellColor }}>
@@ -54,16 +54,10 @@ function LayoutInner() {
           <RouterThemeBridge>
             <StatusBar
               backgroundColor={shellColor}
-              barStyle={
-                theme.colorSystem.previewScheme === 'dark' ? 'light-content' : 'dark-content'
-              }
+              barStyle={isDark ? 'light-content' : 'dark-content'}
               translucent={false}
             />
-            {Platform.OS === 'android' ? (
-              <NavigationBar
-                style={theme.colorSystem.previewScheme === 'dark' ? 'dark' : 'light'}
-              />
-            ) : null}
+            {Platform.OS === 'android' ? <NavigationBar style={isDark ? 'light' : 'dark'} /> : null}
             <Stack
               screenOptions={{
                 contentStyle: { backgroundColor: shellColor },
@@ -111,6 +105,12 @@ function LayoutInner() {
 export default function Layout() {
   const hasFontAssets = Object.keys(themeFontAssets).length > 0;
   const [fontsLoaded, fontsError] = useFonts(themeFontAssets);
+
+  useEffect(() => {
+    if (!hasFontAssets || fontsLoaded || fontsError) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsError, fontsLoaded, hasFontAssets]);
 
   if (hasFontAssets && !fontsLoaded && !fontsError) {
     return null;
